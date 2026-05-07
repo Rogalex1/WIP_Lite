@@ -19,6 +19,6 @@ class TcMiddleware
         if (Auth::check() && Auth::user()->role?->name === 'tc') {
             return $next($request);
         }
-        abort(403);
+        abort(403, 'Accès refusé : rôle tc requis');
     }
 }

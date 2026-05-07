@@ -12,6 +12,7 @@ class PlanningModelController extends Controller
 {
     public function index()
     {
+       
         $models = PlanningModel::with('creator')
             ->latest()
             ->paginate(10);

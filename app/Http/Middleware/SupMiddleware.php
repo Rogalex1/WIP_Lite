@@ -20,6 +20,6 @@ class SupMiddleware
         if (Auth::check() && Auth::user()->role?->name === 'sup') {
             return $next($request);
         }
-        abort(403);
+        abort(403, 'Accès refusé : rôle sup requis');
     }
 }

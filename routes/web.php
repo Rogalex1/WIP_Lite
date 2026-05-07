@@ -52,6 +52,7 @@ Route::middleware('auth')->group(function () {
 ///////////////////////Routes MAXSON ////////////////////////////////////////////////
 
 // Admin   acces total via toutes les routes 
+
 Route::middleware(['auth', 'admin'])->group(function () {
     Route::resource('planning-models', PlanningModelController::class)->parameters(['planning-models' => 'planningModel']);
     Route::resource('planning-assignments', PlanningAssignmentController::class)->parameters(['planning-assignments' => 'planningAssignment']);
@@ -71,8 +72,8 @@ Route::middleware(['auth', 'cp'])->group(function () {
     Route::get('planning-assignments/{planningAssignment}/history', [PlanningAssignmentController::class, 'history'])->name('planning-assignments.history');
 });
 
-// SUP   lecture de tous se qui lui est affecté
-Route::middleware(['auth', 'sup'])->group(function () {
+// SUP   lecture de tous ce qui lui est affecté (admin peut aussi accéder)
+Route::middleware(['auth', 'admin.or.sup'])->group(function () {
     Route::get('planning-models', [PlanningModelController::class, 'index'])->name('planning-models.index');
     Route::get('planning-models/{planningModel}', [PlanningModelController::class, 'show'])->name('planning-models.show');
     Route::get('planning-assignments', [PlanningAssignmentController::class, 'indexSup'])->name('planning-assignments.index');
@@ -107,11 +108,6 @@ Route::middleware(['auth', 'tc'])->group(function () {
 });
 
 ///////////////////////Routes STEVEN ////////////////////////////////////////////////
-
-
-
-
-
 
 ///////////////////////Routes OTHITHI ////////////////////////////////////////////////
 

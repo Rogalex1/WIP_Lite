@@ -44,9 +44,17 @@ class AuthenticatedSessionController extends Controller
         $request->session()->regenerate();
 
         $user = auth()->user();
+        
+        // Log pour débogage
+        \Log::info('User login attempt', [
+            'user_id' => $user->id,
+            'email' => $user->email,
+            'role_id' => $user->role_id,
+            'role_name' => $user->role?->name
+        ]);
 
         $route = $this->getDashboardRoute($user->role?->name);
-// dd($route);
+        
         return redirect()->intended(route($route));
     }
 

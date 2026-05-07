@@ -10,10 +10,11 @@ class AdminMiddleware
 {
     public function handle(Request $request, Closure $next)
     {
+        // dd(Auth::user()->role?->name);
         if (Auth::check() && Auth::user()->role?->name === 'admin') {
             return $next($request);
         }
 
-        abort(403);
+        abort(403, 'Accès refusé : rôle admin requis');
     }
 }
