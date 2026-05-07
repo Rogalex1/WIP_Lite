@@ -10,7 +10,7 @@ import InputText from "primevue/inputtext";
 import Dropdown from "primevue/dropdown";
 import Tag from "primevue/tag";
 import Dialog from "primevue/dialog";
-import Toolbar from "primevue/toolbar";
+import Tooltip from "primevue/tooltip";
 
 const props = defineProps({
     employees: Object,
@@ -211,286 +211,290 @@ const executeStatusChange = () => {
     <Head title="Employés" />
 
     <AdminLayout>
-
-            <div class="flex justify-between items-center">
-                <h2 class="text-xl font-semibold leading-tight text-gray-800">
-                    Gestion des Employés
-                </h2>
-                <div class="flex gap-2">
-                    <Link :href="route('employees.trash')">
-                        <Button
-                            label="Employés Supprimés"
-                            icon="pi pi-trash"
-                            class="p-button-warning"
+        <!-- Conteneur principal qui prend toute la hauteur disponible -->
+        <div class="h-full w-full flex flex-col overflow-hidden">
+            <!-- Barre de filtres -->
+            <div class="p-4 border-b flex-shrink-0 bg-white">
+                <div class="flex gap-2 items-center flex-wrap">
+                    <!-- Champ de recherche -->
+                    <span class="p-input-icon-left">
+                        <i class="pi pi-search" />
+                        <InputText
+                            v-model="search"
+                            placeholder="Rechercher..."
+                            class="w-48"
                         />
-                    </Link>
-                    <Button
-                        label="Nouvel Employé"
-                        icon="pi pi-plus"
-                        class="p-button-primary"
-                        @click="openCreateDialog"
+                    </span>
+
+                    <!-- Filtre par statut -->
+                    <Dropdown
+                        v-model="status"
+                        :options="statusOptions"
+                        optionLabel="label"
+                        optionValue="value"
+                        placeholder="Statut"
+                        class="w-40"
+                    />
+
+                    <!-- Filtre par poste -->
+                    <Dropdown
+                        v-model="position_id"
+                        :options="positionOptions"
+                        optionLabel="label"
+                        optionValue="value"
+                        placeholder="Poste"
+                        class="w-40"
                     />
                 </div>
             </div>
 
-        <div class="h-screen flex flex-col p-4 overflow-hidden">
-            <div class="bg-white overflow-hidden shadow-sm rounded-lg flex flex-col flex-1 w-full">
-                <Toolbar class="mb-4 p-4 border-b">
-                    <template #start>
-                        <div class="flex gap-2 items-center flex-wrap">
-                            <span class="p-input-icon-left">
-                                <i class="pi pi-search" />
-                                <InputText
-                                    v-model="search"
-                                    placeholder="Rechercher..."
-                                    class="w-48"
-                                />
+            <!-- Barre d'actions (séparée) -->
+            <div class="p-4 border-b flex-shrink-0 bg-white flex justify-end gap-2">
+                <Link :href="route('employees.trash')">
+                    <Button
+                        icon="pi pi-trash"
+                        class="p-button-warning p-button-sm"
+                        v-tooltip.top="'Employés Supprimés'"
+                    />
+                </Link>
+                <Button
+                    icon="pi pi-plus"
+                    class="p-button-primary p-button-sm"
+                    v-tooltip.top="'Nouvel Employé'"
+                    @click="openCreateDialog"
+                />
+            </div>
+
+            <!-- Tableau des employés qui prend tout l'espace disponible -->
+            <div class="flex-1 overflow-hidden bg-white">
+                <DataTable
+                    :value="employees.data"
+                    :paginator="true"
+                    :rows="rows"
+                    :first="(page_num - 1) * rows"
+                    :totalRecords="employees.total"
+                    :lazy="true"
+                    @page="onPage"
+                    paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown"
+                    currentPageReportTemplate="Affichage de {first} à {last} sur {totalRecords} employés"
+                    class="p-datatable-sm w-full"
+                    :style="{ height: '100%' }"
+                    stripedRows
+                    responsiveLayout="scroll"
+                    scrollable
+                    scrollHeight="flex"
+                >
+                    <Column field="matricule" header="Matricule" sortable>
+                        <template #body="{ data }">
+                            <span class="font-mono text-sm">{{ data.matricule }}</span>
+                        </template>
+                    </Column>
+
+                    <Column field="full_name" header="Nom complet" sortable>
+                        <template #body="{ data }">
+                            <div>
+                                <div class="font-medium">
+                                    {{ data.first_name }} {{ data.last_name }}
+                                </div>
+                                <div class="text-sm text-gray-500">
+                                    {{ data.email }}
+                                </div>
+                            </div>
+                        </template>
+                    </Column>
+
+                    <Column field="position.name" header="Poste" sortable>
+                        <template #body="{ data }">
+                            {{ data.position?.name || "-" }}
+                        </template>
+                    </Column>
+
+                    <Column field="phone" header="Téléphone">
+                        <template #body="{ data }">
+                            {{ data.phone || "-" }}
+                        </template>
+                    </Column>
+
+                    <Column field="salary_base" header="Salaire" sortable>
+                        <template #body="{ data }">
+                            <span class="font-medium">
+                                {{
+                                    new Intl.NumberFormat("fr-FR", {
+                                        style: "currency",
+                                        currency: "XOF",
+                                    }).format(data.salary_base)
+                                }}
                             </span>
+                        </template>
+                    </Column>
 
-                            <Dropdown
-                                v-model="status"
-                                :options="statusOptions"
-                                optionLabel="label"
-                                optionValue="value"
-                                placeholder="Statut"
-                                class="w-40"
+                    <Column field="status" header="Statut" sortable>
+                        <template #body="{ data }">
+                            <Tag
+                                :value="getStatusLabel(data.status)"
+                                :severity="getStatusColor(data.status)"
                             />
+                        </template>
+                    </Column>
 
-                            <Dropdown
-                                v-model="position_id"
-                                :options="positionOptions"
-                                optionLabel="label"
-                                optionValue="value"
-                                placeholder="Poste"
-                                class="w-40"
-                            />
-                        </div>
-                    </template>
-                </Toolbar>
+                    <Column header="Actions" :exportable="false" style="min-width: 8rem">
+                        <template #body="{ data }">
+                            <div class="flex gap-2 items-center">
+                                <Link :href="route('employees.show', data.id)">
+                                    <Button
+                                        icon="pi pi-eye"
+                                        class="p-button-outlined p-button-info p-button-sm"
+                                        v-tooltip.top="'Voir'"
+                                    />
+                                </Link>
 
-                <div class="flex-1 overflow-auto">
-                    <DataTable
-                        :value="employees.data"
-                        :paginator="true"
-                        :rows="rows"
-                        :first="(page_num - 1) * rows"
-                        :totalRecords="employees.total"
-                        :lazy="true"
-                        @page="onPage"
-                        paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown"
-                        currentPageReportTemplate="Affichage de {first} à {last} sur {totalRecords} employés"
-                        class="p-datatable-sm w-full"
-                        stripedRows
-                        responsiveLayout="scroll"
-                    >
-                        <Column field="matricule" header="Matricule" sortable>
-                            <template #body="{ data }">
-                                <span class="font-mono text-sm">{{ data.matricule }}</span>
-                            </template>
-                        </Column>
-
-                        <Column field="full_name" header="Nom complet" sortable>
-                            <template #body="{ data }">
-                                <div>
-                                    <div class="font-medium">
-                                        {{ data.first_name }} {{ data.last_name }}
-                                    </div>
-                                    <div class="text-sm text-gray-500">
-                                        {{ data.email }}
-                                    </div>
-                                </div>
-                            </template>
-                        </Column>
-
-                        <Column field="position.name" header="Poste" sortable>
-                            <template #body="{ data }">
-                                {{ data.position?.name || "-" }}
-                            </template>
-                        </Column>
-
-                        <Column field="phone" header="Téléphone">
-                            <template #body="{ data }">
-                                {{ data.phone || "-" }}
-                            </template>
-                        </Column>
-
-                        <Column field="salary_base" header="Salaire" sortable>
-                            <template #body="{ data }">
-                                <span class="font-medium">
-                                    {{
-                                        new Intl.NumberFormat("fr-FR", {
-                                            style: "currency",
-                                            currency: "XOF",
-                                        }).format(data.salary_base)
-                                    }}
-                                </span>
-                            </template>
-                        </Column>
-
-                        <Column field="status" header="Statut" sortable>
-                            <template #body="{ data }">
-                                <Tag
-                                    :value="getStatusLabel(data.status)"
-                                    :severity="getStatusColor(data.status)"
+                                <Button
+                                    icon="pi pi-pencil"
+                                    class="p-button-outlined p-button-warning p-button-sm"
+                                    v-tooltip.top="'Modifier'"
+                                    @click="openEditDialog(data)"
                                 />
-                            </template>
-                        </Column>
 
-                        <Column header="Actions" :exportable="false" style="min-width: 8rem">
-                            <template #body="{ data }">
-                                <div class="flex gap-2 items-center">
-                                    <Link :href="route('employees.show', data.id)">
-                                        <Button
-                                            label="Voir"
-                                            icon="pi pi-eye"
-                                            class="p-button-outlined p-button-info"
-                                        />
-                                    </Link>
+                                <Dropdown
+                                    :modelValue="data.status"
+                                    :options="[
+                                        { label: 'Actif', value: 'actif' },
+                                        { label: 'Inactif', value: 'inactif' },
+                                        { label: 'Suspendu', value: 'suspendu' },
+                                    ]"
+                                    optionLabel="label"
+                                    optionValue="value"
+                                    @change="confirmStatusChange(data, $event.value)"
+                                    class="w-32"
+                                    size="small"
+                                />
 
-                                    <Button
-                                        label="Modifier"
-                                        icon="pi pi-pencil"
-                                        class="p-button-outlined p-button-warning"
-                                        @click="openEditDialog(data)"
-                                    />
-
-                                    <Dropdown
-                                        :modelValue="data.status"
-                                        :options="[
-                                            { label: 'Actif', value: 'actif' },
-                                            { label: 'Inactif', value: 'inactif' },
-                                            { label: 'Suspendu', value: 'suspendu' },
-                                        ]"
-                                        optionLabel="label"
-                                        optionValue="value"
-                                        @change="confirmStatusChange(data, $event.value)"
-                                        class="w-32"
-                                        size="small"
-                                    />
-
-                                    <Button
-                                        label="Supprimer"
-                                        icon="pi pi-trash"
-                                        class="p-button-danger"
-                                        @click="confirmDelete(data)"
-                                    />
-                                </div>
-                            </template>
-                        </Column>
-                    </DataTable>
-                </div>
+                                <Button
+                                    icon="pi pi-trash"
+                                    class="p-button-danger p-button-sm"
+                                    v-tooltip.top="'Supprimer'"
+                                    @click="confirmDelete(data)"
+                                />
+                            </div>
+                        </template>
+                    </Column>
+                </DataTable>
             </div>
         </div>
-
-        <Dialog
-            v-model:visible="createDialog"
-            :style="{ width: '90vw', maxWidth: '800px' }"
-            header="Créer un Nouvel Employé"
-            :modal="true"
-            class="p-fluid"
-            :contentStyle="{ backgroundColor: '#ffffff' }"
-        >
-            <EmployeeForm
-                :employee="null"
-                :positions="positions"
-                :isLoading="isFormLoading"
-                @submit="handleCreateSubmit"
-                @cancel="closeCreateDialog"
-            />
-        </Dialog>
-
-        <Dialog
-            v-model:visible="editDialog"
-            :style="{ width: '90vw', maxWidth: '800px' }"
-            header="Modifier l'Employé"
-            :modal="true"
-            class="p-fluid"
-            :contentStyle="{ backgroundColor: '#ffffff' }"
-        >
-            <EmployeeForm
-                v-if="employeeToEdit"
-                :employee="employeeToEdit"
-                :positions="positions"
-                :isLoading="isFormLoading"
-                @submit="handleEditSubmit"
-                @cancel="closeEditDialog"
-            />
-        </Dialog>
-
-        <Dialog
-            v-model:visible="deleteDialog"
-            :style="{ width: '450px' }"
-            header="Confirmation de Suppression"
-            :modal="true"
-        >
-            <div class="flex align-items-center justify-content-center">
-                <i
-                    class="pi pi-exclamation-triangle mr-3"
-                    style="font-size: 2rem; color: #f87171"
-                />
-                <span v-if="employeeToDelete">
-                    Êtes-vous sûr de vouloir supprimer l'employé
-                    <b>{{ employeeToDelete.first_name }} {{ employeeToDelete.last_name }}</b>?<br />
-                    <small class="text-gray-500">Cette action est réversible.</small>
-                </span>
-            </div>
-            <template #footer>
-                <Button
-                    label="Annuler"
-                    icon="pi pi-times"
-                    class="p-button-text"
-                    @click="deleteDialog = false"
-                />
-                <Button
-                    label="Supprimer"
-                    icon="pi pi-trash"
-                    class="p-button-danger"
-                    @click="deleteEmployee"
-                />
-            </template>
-        </Dialog>
-
-        <Dialog
-            v-model:visible="statusChangeDialog"
-            :style="{ width: '450px' }"
-            header="Confirmation de Changement de Statut"
-            :modal="true"
-        >
-            <div class="flex align-items-center justify-content-center">
-                <i
-                    class="pi pi-question-circle mr-3"
-                    style="font-size: 2rem; color: #3b82f6"
-                />
-                <span v-if="statusChangeData.employee">
-                    Changer le statut de
-                    <b>{{ statusChangeData.employee.first_name }} {{ statusChangeData.employee.last_name }}</b><br />
-                    de
-                    <Tag
-                        :value="getStatusLabel(statusChangeData.employee.status)"
-                        :severity="getStatusColor(statusChangeData.employee.status)"
-                        class="mr-2"
-                    />
-                    à
-                    <Tag
-                        :value="getStatusLabel(statusChangeData.newStatus)"
-                        :severity="getStatusColor(statusChangeData.newStatus)"
-                    />
-                </span>
-            </div>
-            <template #footer>
-                <Button
-                    label="Annuler"
-                    icon="pi pi-times"
-                    class="p-button-text"
-                    @click="statusChangeDialog = false"
-                />
-                <Button
-                    label="Confirmer"
-                    icon="pi pi-check"
-                    class="p-button-primary"
-                    @click="executeStatusChange"
-                />
-            </template>
-        </Dialog>
     </AdminLayout>
+
+    <!-- Dialog de création -->
+    <Dialog
+        v-model:visible="createDialog"
+        :style="{ width: '90vw', maxWidth: '800px' }"
+        header="Créer un Nouvel Employé"
+        :modal="true"
+        class="p-fluid"
+        :contentStyle="{ backgroundColor: '#ffffff' }"
+    >
+        <EmployeeForm
+            :employee="null"
+            :positions="positions"
+            :isLoading="isFormLoading"
+            @submit="handleCreateSubmit"
+            @cancel="closeCreateDialog"
+        />
+    </Dialog>
+
+    <!-- Dialog de modification -->
+    <Dialog
+        v-model:visible="editDialog"
+        :style="{ width: '90vw', maxWidth: '800px' }"
+        header="Modifier l'Employé"
+        :modal="true"
+        class="p-fluid"
+        :contentStyle="{ backgroundColor: '#ffffff' }"
+    >
+        <EmployeeForm
+            v-if="employeeToEdit"
+            :employee="employeeToEdit"
+            :positions="positions"
+            :isLoading="isFormLoading"
+            @submit="handleEditSubmit"
+            @cancel="closeEditDialog"
+        />
+    </Dialog>
+
+    <!-- Dialog de confirmation de suppression -->
+    <Dialog
+        v-model:visible="deleteDialog"
+        :style="{ width: '450px' }"
+        header="Confirmation de Suppression"
+        :modal="true"
+    >
+        <div class="flex align-items-center justify-content-center">
+            <i
+                class="pi pi-exclamation-triangle mr-3"
+                style="font-size: 2rem; color: #f87171"
+            />
+            <span v-if="employeeToDelete">
+                Êtes-vous sûr de vouloir supprimer l'employé
+                <b>{{ employeeToDelete.first_name }} {{ employeeToDelete.last_name }}</b>?<br />
+                <small class="text-gray-500">Cette action est réversible.</small>
+            </span>
+        </div>
+        <template #footer>
+            <Button
+                label="Annuler"
+                icon="pi pi-times"
+                class="p-button-text p-button-sm"
+                @click="deleteDialog = false"
+            />
+            <Button
+                label="Supprimer"
+                icon="pi pi-trash"
+                class="p-button-danger p-button-sm"
+                @click="deleteEmployee"
+            />
+        </template>
+    </Dialog>
+
+    <!-- Dialog de confirmation de changement de statut -->
+    <Dialog
+        v-model:visible="statusChangeDialog"
+        :style="{ width: '450px' }"
+        header="Confirmation de Changement de Statut"
+        :modal="true"
+    >
+        <div class="flex align-items-center justify-content-center">
+            <i
+                class="pi pi-question-circle mr-3"
+                style="font-size: 2rem; color: #3b82f6"
+            />
+            <span v-if="statusChangeData.employee">
+                Changer le statut de
+                <b>{{ statusChangeData.employee.first_name }} {{ statusChangeData.employee.last_name }}</b><br />
+                de
+                <Tag
+                    :value="getStatusLabel(statusChangeData.employee.status)"
+                    :severity="getStatusColor(statusChangeData.employee.status)"
+                    class="mr-2"
+                />
+                à
+                <Tag
+                    :value="getStatusLabel(statusChangeData.newStatus)"
+                    :severity="getStatusColor(statusChangeData.newStatus)"
+                />
+            </span>
+        </div>
+        <template #footer>
+            <Button
+                label="Annuler"
+                icon="pi pi-times"
+                class="p-button-text p-button-sm"
+                @click="statusChangeDialog = false"
+            />
+            <Button
+                label="Confirmer"
+                icon="pi pi-check"
+                class="p-button-primary p-button-sm"
+                @click="executeStatusChange"
+            />
+        </template>
+    </Dialog>
 </template>

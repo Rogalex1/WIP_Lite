@@ -9,7 +9,7 @@ import InputText from "primevue/inputtext";
 import Dropdown from "primevue/dropdown";
 import Tag from "primevue/tag";
 import Dialog from "primevue/dialog";
-import Toolbar from "primevue/toolbar";
+import Tooltip from "primevue/tooltip";
 
 // Props depuis le contrôleur
 const props = defineProps({
@@ -185,233 +185,230 @@ const forceDeleteEmployee = () => {
     <Head title="Employés Supprimés" />
 
     <AdminLayout>
+        <!-- Conteneur principal qui prend toute la hauteur disponible -->
+        <div class="h-full w-full flex flex-col overflow-hidden">
+            <!-- Barre de filtres -->
+            <div class="p-4 border-b flex-shrink-0 bg-white">
+                <div class="flex gap-2 items-center flex-wrap">
+                    <!-- Champ de recherche -->
+                    <span class="p-input-icon-left">
+                        <i class="pi pi-search" />
+                        <InputText
+                            v-model="search"
+                            placeholder="Rechercher..."
+                            class="w-64"
+                        />
+                    </span>
 
-            <div class="flex justify-between items-center">
-                <h2 class="text-xl font-semibold leading-tight text-gray-800">
-                    Historique des Employés Supprimés
-                </h2>
+                    <!-- Filtre par poste -->
+                    <Dropdown
+                        v-model="position_id"
+                        :options="positionOptions"
+                        optionLabel="label"
+                        optionValue="value"
+                        placeholder="Poste"
+                        class="w-40"
+                    />
+                </div>
+            </div>
+
+            <!-- Barre d'actions (séparée) -->
+            <div class="p-4 border-b flex-shrink-0 bg-white flex justify-end gap-2">
                 <Link :href="route('employees.index')">
                     <Button
-                        label="Retour à la liste"
                         icon="pi pi-arrow-left"
-                        class="p-button-secondary"
+                        class="p-button-secondary p-button-sm"
+                        v-tooltip.top="'Retour à la liste'"
                     />
                 </Link>
             </div>
 
-        <div class="py-6">
-            <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-                <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
-                    <!-- Filtres -->
-                    <Toolbar class="mb-4">
-                        <template #start>
-                            <div class="flex gap-2 items-center">
-                                <!-- Champ de recherche -->
-                                <span class="p-input-icon-left">
-                                    <i class="pi pi-search" />
-                                    <InputText
-                                        v-model="search"
-                                        placeholder="Rechercher..."
-                                        class="w-64"
-                                    />
-                                </span>
+            <!-- Tableau des employés supprimés qui prend tout l'espace disponible -->
+            <div class="flex-1 overflow-hidden bg-white">
+                <DataTable
+                    :value="employees.data"
+                    :paginator="true"
+                    :rows="rows"
+                    :first="(page - 1) * rows"
+                    :totalRecords="employees.total"
+                    :lazy="true"
+                    @page="onPage"
+                    paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown"
+                    currentPageReportTemplate="Affichage de {first} à {last} sur {totalRecords} employés supprimés"
+                    class="p-datatable-sm w-full"
+                    :style="{ height: '100%' }"
+                    stripedRows
+                    responsiveLayout="scroll"
+                    scrollable
+                    scrollHeight="flex"
+                >
+                    <!-- Colonne : Matricule -->
+                    <Column field="matricule" header="Matricule" sortable>
+                        <template #body="{ data }">
+                            <span class="font-mono text-sm">{{
+                                data.matricule
+                            }}</span>
+                        </template>
+                    </Column>
 
-                                <!-- Filtre par poste -->
-                                <Dropdown
-                                    v-model="position_id"
-                                    :options="positionOptions"
-                                    optionLabel="label"
-                                    optionValue="value"
-                                    placeholder="Poste"
-                                    class="w-40"
+                    <!-- Colonne : Nom complet -->
+                    <Column field="full_name" header="Nom complet" sortable>
+                        <template #body="{ data }">
+                            <div class="flex items-center">
+                                <div>
+                                    <div class="font-medium">
+                                        {{ data.first_name }}
+                                        {{ data.last_name }}
+                                    </div>
+                                    <div class="text-sm text-gray-500">
+                                        {{ data.email }}
+                                    </div>
+                                </div>
+                            </div>
+                        </template>
+                    </Column>
+
+                    <!-- Colonne : Poste -->
+                    <Column field="position.name" header="Poste" sortable>
+                        <template #body="{ data }">
+                            {{ data.position?.name || "-" }}
+                        </template>
+                    </Column>
+
+                    <!-- Colonne : Statut -->
+                    <Column field="status" header="Statut" sortable>
+                        <template #body="{ data }">
+                            <Tag
+                                :value="getStatusLabel(data.status)"
+                                :severity="getStatusColor(data.status)"
+                            />
+                        </template>
+                    </Column>
+
+                    <!-- Colonne : Date de suppression -->
+                    <Column
+                        field="deleted_at"
+                        header="Date de suppression"
+                        sortable
+                    >
+                        <template #body="{ data }">
+                            <span class="text-sm">
+                                {{ formatDate(data.deleted_at) }}
+                            </span>
+                        </template>
+                    </Column>
+
+                    <!-- Colonne : Actions -->
+                    <Column
+                        header="Actions"
+                        :exportable="false"
+                        style="min-width: 12rem"
+                    >
+                        <template #body="{ data }">
+                            <div class="flex gap-2 items-center">
+                                <!-- Bouton Restaurer -->
+                                <Button
+                                    icon="pi pi-refresh"
+                                    class="p-button-outlined p-button-success p-button-sm"
+                                    v-tooltip.top="'Restaurer'"
+                                    @click="confirmRestore(data)"
+                                />
+
+                                <!-- Bouton Supprimer définitivement -->
+                                <Button
+                                    icon="pi pi-trash"
+                                    class="p-button-danger p-button-sm"
+                                    v-tooltip.top="'Supprimer définitivement'"
+                                    @click="confirmForceDelete(data)"
                                 />
                             </div>
                         </template>
-                    </Toolbar>
-
-                    <!-- Tableau des employés supprimés -->
-                    <DataTable
-                        :value="employees.data"
-                        :paginator="true"
-                        :rows="rows"
-                        :first="(page - 1) * rows"
-                        :totalRecords="employees.total"
-                        :lazy="true"
-                        @page="onPage"
-                        paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown"
-                        currentPageReportTemplate="Affichage de {first} à {last} sur {totalRecords} employés supprimés"
-                        class="p-datatable-sm"
-                        stripedRows
-                        responsiveLayout="scroll"
-                    >
-                        <!-- Colonne : Matricule -->
-                        <Column field="matricule" header="Matricule" sortable>
-                            <template #body="{ data }">
-                                <span class="font-mono text-sm">{{
-                                    data.matricule
-                                }}</span>
-                            </template>
-                        </Column>
-
-                        <!-- Colonne : Nom complet -->
-                        <Column field="full_name" header="Nom complet" sortable>
-                            <template #body="{ data }">
-                                <div class="flex items-center">
-                                    <div>
-                                        <div class="font-medium">
-                                            {{ data.first_name }}
-                                            {{ data.last_name }}
-                                        </div>
-                                        <div class="text-sm text-gray-500">
-                                            {{ data.email }}
-                                        </div>
-                                    </div>
-                                </div>
-                            </template>
-                        </Column>
-
-                        <!-- Colonne : Poste -->
-                        <Column field="position.name" header="Poste" sortable>
-                            <template #body="{ data }">
-                                {{ data.position?.name || "-" }}
-                            </template>
-                        </Column>
-
-                        <!-- Colonne : Statut -->
-                        <Column field="status" header="Statut" sortable>
-                            <template #body="{ data }">
-                                <Tag
-                                    :value="getStatusLabel(data.status)"
-                                    :severity="getStatusColor(data.status)"
-                                />
-                            </template>
-                        </Column>
-
-                        <!-- Colonne : Date de suppression -->
-                        <Column
-                            field="deleted_at"
-                            header="Date de suppression"
-                            sortable
-                        >
-                            <template #body="{ data }">
-                                <span class="text-sm">
-                                    {{ formatDate(data.deleted_at) }}
-                                </span>
-                            </template>
-                        </Column>
-
-                        <!-- Colonne : Actions -->
-                        <Column
-                            header="Actions"
-                            :exportable="false"
-                            style="min-width: 12rem"
-                        >
-                            <template #body="{ data }">
-                                <div class="flex gap-2 items-center">
-                                    <!-- Bouton Restaurer -->
-                                    <Button
-                                        label="Restaurer"
-                                        icon="pi pi-refresh"
-                                        class="p-button-outlined p-button-success"
-                                        @click="confirmRestore(data)"
-                                    />
-
-                                    <!-- Bouton Supprimer définitivement -->
-                                    <Button
-                                        label="Supprimer"
-                                        icon="pi pi-trash"
-                                        class="p-button-danger"
-                                        @click="confirmForceDelete(data)"
-                                    />
-                                </div>
-                            </template>
-                        </Column>
-                    </DataTable>
-                </div>
+                    </Column>
+                </DataTable>
             </div>
         </div>
-
-        <!-- Dialog de confirmation de restauration -->
-        <Dialog
-            v-model:visible="restoreDialog"
-            :style="{ width: '450px' }"
-            header="Confirmation de Restauration"
-            :modal="true"
-        >
-            <div class="flex align-items-center justify-content-center">
-                <i
-                    class="pi pi-refresh mr-3"
-                    style="font-size: 2rem; color: #10b981"
-                />
-                <span v-if="employeeToRestore">
-                    Êtes-vous sûr de vouloir restaurer l'employé
-                    <b
-                        >{{ employeeToRestore.first_name }}
-                        {{ employeeToRestore.last_name }}</b
-                    >
-                    ?<br />
-                    <small class="text-gray-500"
-                        >Il réapparaîtra dans la liste principale des
-                        employés.</small
-                    >
-                </span>
-            </div>
-            <template #footer>
-                <Button
-                    label="Annuler"
-                    icon="pi pi-times"
-                    class="p-button-text"
-                    @click="restoreDialog = false"
-                />
-                <Button
-                    label="Restaurer"
-                    icon="pi pi-refresh"
-                    class="p-button-success"
-                    @click="restoreEmployee"
-                />
-            </template>
-        </Dialog>
-
-        <!-- Dialog de confirmation de suppression définitive -->
-        <Dialog
-            v-model:visible="forceDeleteDialog"
-            :style="{ width: '450px' }"
-            header="Confirmation de Suppression Définitive"
-            :modal="true"
-        >
-            <div class="flex align-items-center justify-content-center">
-                <i
-                    class="pi pi-exclamation-triangle mr-3"
-                    style="font-size: 2rem; color: #ef4444"
-                />
-                <span v-if="employeeToDelete">
-                    Êtes-vous sûr de vouloir supprimer définitivement l'employé
-                    <b
-                        >{{ employeeToDelete.first_name }}
-                        {{ employeeToDelete.last_name }}</b
-                    >
-                    ?<br />
-                    <small class="text-red-600"
-                        ><strong>Attention :</strong> Cette action est
-                        irréversible et supprimera toutes les données
-                        associées.</small
-                    >
-                </span>
-            </div>
-            <template #footer>
-                <Button
-                    label="Annuler"
-                    icon="pi pi-times"
-                    class="p-button-text"
-                    @click="forceDeleteDialog = false"
-                />
-                <Button
-                    label="Supprimer définitivement"
-                    icon="pi pi-trash"
-                    class="p-button-danger"
-                    @click="forceDeleteEmployee"
-                />
-            </template>
-        </Dialog>
     </AdminLayout>
+
+    <!-- Dialog de confirmation de restauration -->
+    <Dialog
+        v-model:visible="restoreDialog"
+        :style="{ width: '450px' }"
+        header="Confirmation de Restauration"
+        :modal="true"
+    >
+        <div class="flex align-items-center justify-content-center">
+            <i
+                class="pi pi-refresh mr-3"
+                style="font-size: 2rem; color: #10b981"
+            />
+            <span v-if="employeeToRestore">
+                Êtes-vous sûr de vouloir restaurer l'employé
+                <b
+                    >{{ employeeToRestore.first_name }}
+                    {{ employeeToRestore.last_name }}</b
+                >
+                ?<br />
+                <small class="text-gray-500"
+                    >Il réapparaîtra dans la liste principale des
+                    employés.</small
+                >
+            </span>
+        </div>
+        <template #footer>
+            <Button
+                label="Annuler"
+                icon="pi pi-times"
+                class="p-button-text p-button-sm"
+                @click="restoreDialog = false"
+            />
+            <Button
+                label="Restaurer"
+                icon="pi pi-refresh"
+                class="p-button-success p-button-sm"
+                @click="restoreEmployee"
+            />
+        </template>
+    </Dialog>
+
+    <!-- Dialog de confirmation de suppression définitive -->
+    <Dialog
+        v-model:visible="forceDeleteDialog"
+        :style="{ width: '450px' }"
+        header="Confirmation de Suppression Définitive"
+        :modal="true"
+    >
+        <div class="flex align-items-center justify-content-center">
+            <i
+                class="pi pi-exclamation-triangle mr-3"
+                style="font-size: 2rem; color: #ef4444"
+            />
+            <span v-if="employeeToDelete">
+                Êtes-vous sûr de vouloir supprimer définitivement l'employé
+                <b
+                    >{{ employeeToDelete.first_name }}
+                    {{ employeeToDelete.last_name }}</b
+                >
+                ?<br />
+                <small class="text-red-600"
+                    ><strong>Attention :</strong> Cette action est
+                    irréversible et supprimera toutes les données
+                    associées.</small
+                >
+            </span>
+        </div>
+        <template #footer>
+            <Button
+                label="Annuler"
+                icon="pi pi-times"
+                class="p-button-text p-button-sm"
+                @click="forceDeleteDialog = false"
+            />
+            <Button
+                label="Supprimer définitivement"
+                icon="pi pi-trash"
+                class="p-button-danger p-button-sm"
+                @click="forceDeleteEmployee"
+            />
+        </template>
+    </Dialog>
 </template>

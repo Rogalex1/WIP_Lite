@@ -34,10 +34,16 @@ const displayFlashToasts = () => {
     const flash = page.props.flash;
     
     // Ne rien faire si flash est vide
-    if (!flash) return;
+    if (!flash) {
+        console.log('Flash vide, pas de toast à afficher');
+        return;
+    }
+
+    console.log('Flash messages reçus:', flash);
 
     // Afficher le toast de succès (vert) - ex: création, modification, suppression
     if (flash.success) {
+        console.log('Affichage du toast de succès:', flash.success);
         toast.add({
             severity: 'success',
             summary: 'Succès',
@@ -48,6 +54,7 @@ const displayFlashToasts = () => {
 
     // Afficher le toast d'erreur (rouge) - ex: exception serveur
     if (flash.error) {
+        console.log('Affichage du toast d\'erreur:', flash.error);
         toast.add({
             severity: 'error',
             summary: 'Erreur',
@@ -58,6 +65,7 @@ const displayFlashToasts = () => {
 
     // Afficher le toast d'information (bleu) - ex: message neutre
     if (flash.info) {
+        console.log('Affichage du toast d\'information:', flash.info);
         toast.add({
             severity: 'info',
             summary: 'Information',
@@ -68,6 +76,7 @@ const displayFlashToasts = () => {
 
     // Afficher le toast d'avertissement (orange) - ex: action partielle
     if (flash.warning) {
+        console.log('Affichage du toast d\'avertissement:', flash.warning);
         toast.add({
             severity: 'warn',
             summary: 'Avertissement',
@@ -82,19 +91,22 @@ const displayFlashToasts = () => {
  * Cela capture les messages flash du premier chargement de la page.
  */
 onMounted(() => {
+    console.log('AuthenticatedLayout montée, vérification des toasts');
     displayFlashToasts();
 });
 
 /**
- * Surveiller les changements dans page.props.
+ * Surveiller les changements dans page.props.flash.
  * À chaque navigation Inertia (redirect, lien, formulaire), les props changent
  * et on affiche automatiquement les toasts correspondants.
  * 
- * deep: true permet de détecter les mutations profondes dans les objets imbriqués.
+ * On surveille spécifiquement page.props.flash pour détecter les changements
+ * dans les messages flash.
  */
 watch(
-    () => page.props,
-    () => {
+    () => page.props.flash,
+    (newFlash) => {
+        console.log('Changement détecté dans page.props.flash:', newFlash);
         displayFlashToasts();
     },
     { deep: true }
@@ -108,9 +120,9 @@ watch(
              position="top-right" : affichage en haut à droite de l'écran -->
         <Toast position="top-right" />
 
-        <div class="min-h-screen bg-gray-100 flex flex-col">
+        <div class="h-screen bg-gray-100 flex flex-col">
             <nav
-                class="border-b border-gray-100 bg-white"
+                class="border-b border-gray-100 bg-white flex-shrink-0"
             >
                 <!-- Primary Navigation Menu -->
                 <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
@@ -297,16 +309,16 @@ watch(
 
             <!-- Page Heading -->
             <header
-                class="bg-white shadow"
+                class="bg-white shadow flex-shrink-0"
                 v-if="$slots.header"
             >
-                <div class="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+                <div class="mx-auto max-w-full px-4 py-6 sm:px-6 lg:px-8">
                     <slot name="header" />
                 </div>
             </header>
 
             <!-- Page Content -->
-            <main class="flex-1 overflow-hidden">
+            <main class="flex-1 overflow-auto bg-gray-100">
                 <slot />
             </main>
         </div>

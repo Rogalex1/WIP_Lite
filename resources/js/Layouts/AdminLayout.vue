@@ -1,29 +1,113 @@
 <script setup>
-import { ref } from "vue";
+import { ref, watch, onMounted } from "vue";
 import DropdownLink from "@/Components/DropdownLink.vue";
 import { Link, usePage } from "@inertiajs/vue3";
 import OverlayPanel from "primevue/overlaypanel";
 import Button from "primevue/button";
 import { computed } from "vue";
-import { onMounted } from 'vue';
-
 
 import { useToast } from 'primevue/usetoast';
 import Toast from 'primevue/toast';
+
+// Récupérer le service toast PrimeVue
 const toast = useToast();
 
+// Récupérer l'objet page d'Inertia qui contient les props partagées
+const page = usePage();
+
+/**
+ * Fonction pour afficher les toasts basés sur les messages flash.
+ * Elle est appelée au montage et à chaque changement de page.props.
+ * 
+ * Les messages flash sont définis côté serveur via :
+ * - redirect()->with('success', 'Message...')
+ * - redirect()->with('error', 'Message...')
+ * - redirect()->with('info', 'Message...')
+ * - redirect()->with('warning', 'Message...')
+ */
+const displayFlashToasts = () => {
+    const flash = page.props.flash;
+    
+    // Ne rien faire si flash est vide
+    if (!flash) {
+        console.log('Flash vide, pas de toast à afficher');
+        return;
+    }
+
+    console.log('Flash messages reçus:', flash);
+
+    // Afficher le toast de succès (vert) - ex: création, modification, suppression
+    if (flash.success) {
+        console.log('Affichage du toast de succès:', flash.success);
+        toast.add({
+            severity: 'success',
+            summary: 'Succès',
+            detail: flash.success,
+            life: 4000,
+        });
+    }
+
+    // Afficher le toast d'erreur (rouge) - ex: exception serveur
+    if (flash.error) {
+        console.log('Affichage du toast d\'erreur:', flash.error);
+        toast.add({
+            severity: 'error',
+            summary: 'Erreur',
+            detail: flash.error,
+            life: 5000,
+        });
+    }
+
+    // Afficher le toast d'information (bleu) - ex: message neutre
+    if (flash.info) {
+        console.log('Affichage du toast d\'information:', flash.info);
+        toast.add({
+            severity: 'info',
+            summary: 'Information',
+            detail: flash.info,
+            life: 4000,
+        });
+    }
+
+    // Afficher le toast d'avertissement (orange) - ex: action partielle
+    if (flash.warning) {
+        console.log('Affichage du toast d\'avertissement:', flash.warning);
+        toast.add({
+            severity: 'warn',
+            summary: 'Avertissement',
+            detail: flash.warning,
+            life: 4000,
+        });
+    }
+};
+
+/**
+ * Au montage du layout, afficher les toasts s'il y en a.
+ * Cela capture les messages flash du premier chargement de la page.
+ */
 onMounted(() => {
-    toast.add({
-        severity: 'success',
-        summary: 'Bienvenue 👋',
-        detail: 'Heureux de vous revoir sur votre tableau de bord !',
-        life: 4000
-    });
+    console.log('AdminLayout montée, vérification des toasts');
+    displayFlashToasts();
 });
 
+/**
+ * Surveiller les changements dans page.props.flash.
+ * À chaque navigation Inertia (redirect, lien, formulaire), les props changent
+ * et on affiche automatiquement les toasts correspondants.
+ * 
+ * On surveille spécifiquement page.props.flash pour détecter les changements
+ * dans les messages flash.
+ */
+watch(
+    () => page.props.flash,
+    (newFlash) => {
+        console.log('Changement détecté dans page.props.flash:', newFlash);
+        displayFlashToasts();
+    },
+    { deep: true }
+);
 
 const op = ref();
-const page = usePage();
 
 const markAsRead = (id) => {
     // Logique router.post ici plus tard
@@ -40,7 +124,7 @@ const isActive = (route) => page.url.startsWith(route);
    <Toast position="top-right" />
 
     <div
-        class="min-h-screen bg-slate-50 flex font-sans antialiased text-slate-900"
+        class="h-screen bg-slate-50 flex font-sans antialiased text-slate-900 overflow-hidden"
     >
         <!-- Sidebar -->
 <!-- Sidebar -->
@@ -266,11 +350,8 @@ const isActive = (route) => page.url.startsWith(route);
             </OverlayPanel>
 
             <!-- Main Page Content -->
-            <main class="p-8 flex-1">
-                <!-- Conteneur pour limiter la largeur du contenu et le rendre plus lisible -->
-                <div class="max-w-7xl mx-auto">
-                    <slot />
-                </div>
+            <main class="flex-1 overflow-hidden">
+                <slot />
             </main>
         </div>
     </div>
