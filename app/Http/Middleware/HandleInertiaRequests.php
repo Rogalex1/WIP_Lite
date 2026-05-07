@@ -23,7 +23,8 @@ class HandleInertiaRequests extends Middleware
     }
 
     /**
-     * Define the props that are shared by default.
+     * Définir les props partagées par défaut avec toutes les pages Inertia.
+     * On y inclut les messages flash pour les notifications toast.
      *
      * @return array<string, mixed>
      */
@@ -40,6 +41,14 @@ class HandleInertiaRequests extends Middleware
                 : [],
 
                 'role' => $request->user()?->role?->name,
+            ],
+            // Partage des messages flash pour les toasts PrimeVue
+            // Ces messages sont définis via redirect()->with('success', '...')
+            'flash' => [
+                'success' => $request->session()->get('success'),
+                'error'   => $request->session()->get('error'),
+                'info'    => $request->session()->get('info'),
+                'warning' => $request->session()->get('warning'),
             ],
         ];
     }

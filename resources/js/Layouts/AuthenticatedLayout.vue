@@ -1,18 +1,114 @@
 <script setup>
-import { ref } from 'vue';
+import { ref, watch, onMounted } from 'vue';
 import ApplicationLogo from '@/Components/ApplicationLogo.vue';
 import Dropdown from '@/Components/Dropdown.vue';
 import DropdownLink from '@/Components/DropdownLink.vue';
 import NavLink from '@/Components/NavLink.vue';
 import ResponsiveNavLink from '@/Components/ResponsiveNavLink.vue';
-import { Link } from '@inertiajs/vue3';
+import { Link, usePage } from '@inertiajs/vue3';
+// Composant Toast PrimeVue — affiche les notifications dans le DOM
+import Toast from 'primevue/toast';
+// Service toast PrimeVue pour afficher les messages
+import { useToast } from 'primevue/usetoast';
 
+// État pour le menu hamburger (mobile)
 const showingNavigationDropdown = ref(false);
+
+// Récupérer le service toast PrimeVue
+const toast = useToast();
+
+// Récupérer l'objet page d'Inertia qui contient les props partagées
+const page = usePage();
+
+/**
+ * Fonction pour afficher les toasts basés sur les messages flash.
+ * Elle est appelée au montage et à chaque changement de page.props.
+ * 
+ * Les messages flash sont définis côté serveur via :
+ * - redirect()->with('success', 'Message...')
+ * - redirect()->with('error', 'Message...')
+ * - redirect()->with('info', 'Message...')
+ * - redirect()->with('warning', 'Message...')
+ */
+const displayFlashToasts = () => {
+    const flash = page.props.flash;
+    
+    // Ne rien faire si flash est vide
+    if (!flash) return;
+
+    // Afficher le toast de succès (vert) - ex: création, modification, suppression
+    if (flash.success) {
+        toast.add({
+            severity: 'success',
+            summary: 'Succès',
+            detail: flash.success,
+            life: 4000,
+        });
+    }
+
+    // Afficher le toast d'erreur (rouge) - ex: exception serveur
+    if (flash.error) {
+        toast.add({
+            severity: 'error',
+            summary: 'Erreur',
+            detail: flash.error,
+            life: 5000,
+        });
+    }
+
+    // Afficher le toast d'information (bleu) - ex: message neutre
+    if (flash.info) {
+        toast.add({
+            severity: 'info',
+            summary: 'Information',
+            detail: flash.info,
+            life: 4000,
+        });
+    }
+
+    // Afficher le toast d'avertissement (orange) - ex: action partielle
+    if (flash.warning) {
+        toast.add({
+            severity: 'warn',
+            summary: 'Avertissement',
+            detail: flash.warning,
+            life: 4000,
+        });
+    }
+};
+
+/**
+ * Au montage du layout, afficher les toasts s'il y en a.
+ * Cela capture les messages flash du premier chargement de la page.
+ */
+onMounted(() => {
+    displayFlashToasts();
+});
+
+/**
+ * Surveiller les changements dans page.props.
+ * À chaque navigation Inertia (redirect, lien, formulaire), les props changent
+ * et on affiche automatiquement les toasts correspondants.
+ * 
+ * deep: true permet de détecter les mutations profondes dans les objets imbriqués.
+ */
+watch(
+    () => page.props,
+    () => {
+        displayFlashToasts();
+    },
+    { deep: true }
+);
 </script>
 
 <template>
     <div>
-        <div class="min-h-screen bg-gray-100">
+        <!-- Composant Toast PrimeVue : doit être placé à la racine du layout
+             pour être accessible depuis toutes les pages enfants.
+             position="top-right" : affichage en haut à droite de l'écran -->
+        <Toast position="top-right" />
+
+        <div class="min-h-screen bg-gray-100 flex flex-col">
             <nav
                 class="border-b border-gray-100 bg-white"
             >
@@ -22,7 +118,7 @@ const showingNavigationDropdown = ref(false);
                         <div class="flex">
                             <!-- Logo -->
                             <div class="flex shrink-0 items-center">
-                                <Link :href="route('dashboard')">
+                                <Link :href="route('admin.dashboard')">
                                     <ApplicationLogo
                                         class="block h-9 w-auto fill-current text-gray-800"
                                     />
@@ -30,6 +126,16 @@ const showingNavigationDropdown = ref(false);
                             </div>
 
                             <!-- Navigation Links -->
+                            <div
+                                class="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex"
+                            >
+                                <NavLink
+                                   :href="route('admin.dashboard')"
+                                    :active="route().current('dashboard')"
+                                >
+                                    Dashboard
+                                </NavLink>
+                            </div>
 <div class="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex">
     <NavLink
         :href="route('dashboard')"
@@ -151,7 +257,7 @@ const showingNavigationDropdown = ref(false);
                 >
                     <div class="space-y-1 pb-3 pt-2">
                         <ResponsiveNavLink
-                            :href="route('dashboard')"
+                           :href="route('admin.dashboard')"
                             :active="route().current('dashboard')"
                         >
                             Dashboard
@@ -200,7 +306,7 @@ const showingNavigationDropdown = ref(false);
             </header>
 
             <!-- Page Content -->
-            <main>
+            <main class="flex-1 overflow-hidden">
                 <slot />
             </main>
         </div>

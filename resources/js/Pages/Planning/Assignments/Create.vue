@@ -57,7 +57,7 @@
                 label="Annuler"
                 severity="secondary"
                 type="button"
-                @click="$inertia.visit(route('planning-assignments.index'))"
+                @click="$inertia.visit(planningAssignmentRoute('index'))"
               />
               <Button
                 label="Enregistrer"
@@ -78,13 +78,16 @@
 <script setup>
 import { computed } from 'vue'
 import { useForm } from '@inertiajs/vue3'
-import AppLayout from '@/Layouts/AppLayout.vue'
+import AppLayout from '@/Layouts/AdminLayout.vue'
 import { Button, Card, Dropdown, DatePicker } from 'primevue'
+import { useRoleRoutes } from '@/Composables/useRoleRoutes.js'
 
 const props = defineProps({
   employees:      Array,
   planningModels: Array,
 })
+
+const { planningAssignmentRoute } = useRoleRoutes()
 
 // Formater pour le Dropdown
 const employees = computed(() =>
@@ -114,6 +117,6 @@ function submit() {
     start_date: form.start_date ? new Date(form.start_date).toISOString().split('T')[0] : null,
     end_date:   form.end_date   ? new Date(form.end_date).toISOString().split('T')[0]   : null,
   }
-  form.transform(() => data).post(route('planning-assignments.store'))
+  form.transform(() => data).post(planningAssignmentRoute('store'))
 }
 </script>

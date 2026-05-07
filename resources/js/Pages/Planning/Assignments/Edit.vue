@@ -1,8 +1,11 @@
 <script setup>
 import { computed } from 'vue'
 import { useForm } from '@inertiajs/vue3'
-import AppLayout from '@/Layouts/AppLayout.vue'
+import AppLayout from '@/Layouts/AdminLayout.vue'
 import { Button, Card, Dropdown, DatePicker } from 'primevue'
+import { useRoleRoutes } from '@/Composables/useRoleRoutes.js'
+
+const { planningAssignmentRoute } = useRoleRoutes()
 
 const props = defineProps({
   assignment:     Object,
@@ -35,7 +38,7 @@ const form = useForm({
 })
 
 function submit() {
-  form.put(route('planning-assignments.update', props.assignment.id))
+  form.put(planningAssignmentRoute('update', props.assignment.id))
 }
 </script>
 
@@ -96,7 +99,7 @@ function submit() {
                 label="Annuler"
                 severity="secondary"
                 type="button"
-                @click="$inertia.visit(route('planning-assignments.index'))"
+                @click="$inertia.visit(planningAssignmentRoute('index'))"
               />
               <Button
                 label="Mettre à jour"

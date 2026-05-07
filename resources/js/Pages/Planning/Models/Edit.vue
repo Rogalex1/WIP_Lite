@@ -50,7 +50,7 @@
                 label="Annuler" 
                 severity="secondary" 
                 type="button"
-                @click="$inertia.visit(route('planning-models.index'))" 
+                @click="$inertia.visit(planningModelRoute('index'))" 
               />
               <Button 
                 label="Mettre à jour" 
@@ -71,8 +71,11 @@
 <script setup>
 import { computed } from 'vue'
 import { useForm } from '@inertiajs/vue3'
-import AppLayout from '@/Layouts/AppLayout.vue'
+import AppLayout from '@/Layouts/AdminLayout.vue'
 import { Button, Card, InputText, InputNumber, Textarea } from 'primevue'
+import { useRoleRoutes } from '@/Composables/useRoleRoutes.js'
+
+const { planningModelRoute } = useRoleRoutes()
 
 const props = defineProps({
   model: Object,
@@ -113,6 +116,6 @@ const totalHeures = computed(() => {
 })
 
 function submit() {
-  form.put(route('planning-models.update', props.model.id))
+  form.put(planningModelRoute('update', props.model.id))
 }
 </script>

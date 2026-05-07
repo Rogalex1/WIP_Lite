@@ -14,6 +14,22 @@ use Inertia\Inertia;
 
 class PlanningAssignmentController extends Controller
 {
+    /**
+     * Détermine le préfixe de route selon le rôle de l'utilisateur
+     */
+    private function getRoutePrefix(): string
+    {
+        return auth()->user()->role?->name === 'admin' ? 'admin' : 'cp';
+    }
+
+    /**
+     * Génère le nom de route complet avec le bon préfixe
+     */
+    private function getRouteName(string $action): string
+    {
+        return $this->getRoutePrefix() . '.planning-assignments.' . $action;
+    }
+
     public function index()
     {
         $planningAssignments = PlanningAssignment::with([
@@ -54,7 +70,7 @@ class PlanningAssignmentController extends Controller
         PlanningAssignment::create($request->validated());
 
         return redirect()
-            ->route('planning-assignments.index')
+            ->route($this->getRouteName('index'))
             ->with('success', 'Affectation créée avec succès.');
     }
 
@@ -100,12 +116,25 @@ class PlanningAssignmentController extends Controller
         $planningAssignment->update($request->validated());
 
         return redirect()
-            ->route('planning-assignments.index')
+            ->route($this->getRouteName('index'))
             ->with('success', 'Affectation mise à jour avec succès.');
     }
 
     public function destroy(PlanningAssignment $planningAssignment)
     {
+        // Logique métier : seul l'admin peut supprimer des affectations
+        if (auth()->user()->role?->name === 'cp') {
+            return back()->with('error', 'Le CP ne peut pas supprimer d\'affectations. Utilisez "Suspendre" ou "Terminer".');
+        }
+
+        if (auth()->user()->role?->name === 'sup') {
+            return back()->with('error', 'Le SUP n\'a pas accès à la suppression d\'affectations.');
+        }
+
+        if (auth()->user()->role?->name === 'tc') {
+            return back()->with('error', 'Le TC n\'a pas accès à la suppression d\'affectations.');
+        }
+
         if ($planningAssignment->status === 'validé') {
             return back()->with('error', 'Impossible de supprimer une affectation validée.');
         }
@@ -113,12 +142,18 @@ class PlanningAssignmentController extends Controller
         $planningAssignment->delete();
 
         return redirect()
-            ->route('planning-assignments.index')
+            ->route($this->getRouteName('index'))
             ->with('success', 'Affectation supprimée avec succès.');
     }
 
     public function validateAssignment(PlanningAssignment $planningAssignment)
     {
+        // Logique métier : seul le CP peut valider (l'admin peut aussi en god mode)
+        $userRole = auth()->user()->role?->name;
+        if (!in_array($userRole, ['admin', 'cp'])) {
+            return back()->with('error', 'Seul le CP peut valider les affectations.');
+        }
+
         if ($planningAssignment->status !== 'en attente') {
             return back()->with('error', 'Seules les affectations en attente peuvent être validées.');
         }
@@ -136,7 +171,7 @@ class PlanningAssignmentController extends Controller
             'old_status' => $oldStatus,
             'new_status' => 'validé',
             'changed_by' => auth()->user()->id,
-            'reason' => "Validation de l'affectation",
+            'reason' => request('reason') ?? "Validation de l'affectation",
         ]);
 
         return back()->with('success', 'Affectation validée avec succès.');
@@ -144,6 +179,12 @@ class PlanningAssignmentController extends Controller
 
     public function suspend(PlanningAssignment $planningAssignment)
     {
+        // Logique métier : seul le CP peut suspendre (l'admin peut aussi en god mode)
+        $userRole = auth()->user()->role?->name;
+        if (!in_array($userRole, ['admin', 'cp'])) {
+            return back()->with('error', 'Seul le CP peut suspendre les affectations.');
+        }
+
         if ($planningAssignment->status !== 'validé') {
             return back()->with('error', 'Seules les affectations validées peuvent être suspendues.');
         }
@@ -165,6 +206,12 @@ class PlanningAssignmentController extends Controller
 
     public function terminate(PlanningAssignment $planningAssignment)
     {
+        // Logique métier : seul le CP peut terminer (l'admin peut aussi en god mode)
+        $userRole = auth()->user()->role?->name;
+        if (!in_array($userRole, ['admin', 'cp'])) {
+            return back()->with('error', 'Seul le CP peut terminer les affectations.');
+        }
+
         if ($planningAssignment->status === 'terminé') {
             return back()->with('error', 'Cette affectation est déjà terminée.');
         }

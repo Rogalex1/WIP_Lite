@@ -24,6 +24,7 @@ return new class extends Migration
         $table->foreignId('position_id')->constrained();
         $table->decimal('salary_base', 10, 2)->default(0);
         $table->string('status')->default('actif');
+        $table->softDeletes();
         $table->timestamps();
     });
     }

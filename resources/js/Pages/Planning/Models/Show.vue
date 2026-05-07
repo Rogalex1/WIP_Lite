@@ -10,13 +10,13 @@
             label="Modifier"
             icon="pi pi-pencil"
             severity="warning"
-            @click="$inertia.visit(route('planning-models.edit', model.id))"
+            @click="$inertia.visit(planningModelRoute('edit', model.id))"
           />
           <Button
             label="Retour"
             icon="pi pi-arrow-left"
             severity="secondary"
-            @click="$inertia.visit(route('planning-models.index'))"
+            @click="$inertia.visit(planningModelRoute('index'))"
           />
         </div>
       </div>
@@ -74,8 +74,11 @@
 </template>
 
 <script setup>
-import AppLayout from '@/Layouts/AppLayout.vue'
+import AppLayout from '@/Layouts/AdminLayout.vue'
 import { Button, Card, Tag } from 'primevue'
+import { useRoleRoutes } from '@/Composables/useRoleRoutes.js'
+
+const { planningModelRoute } = useRoleRoutes()
 
 const props = defineProps({
   model: Object,

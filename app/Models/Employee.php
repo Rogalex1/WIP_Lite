@@ -3,11 +3,12 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class Employee extends Model
 {
-    use HasFactory;
+    use HasFactory, SoftDeletes;
 
     protected $fillable = [
         'user_id',
@@ -26,8 +27,7 @@ class Employee extends Model
     protected $casts = [
         'birth_date' => 'date',
         'salary_base' => 'decimal:2',
-        'created_at' => 'datetime',
-        'updated_at' => 'datetime',
+        'deleted_at' => 'datetime',
     ];
 
     /**
@@ -39,8 +39,31 @@ class Employee extends Model
     }
 
     /**
-     * Scopes
+     * Scopes de recherche et filtres
      */
+    
+    // Scope pour la recherche par nom, prénom, matricule ou email
+    public function scopeSearch($query, $term)
+    {
+        return $query->where(function($q) use ($term) {
+            $q->where('first_name', 'like', "%{$term}%")
+              ->orWhere('last_name', 'like', "%{$term}%")
+              ->orWhere('matricule', 'like', "%{$term}%")
+              ->orWhere('email', 'like', "%{$term}%");
+        });
+    }
+
+    // Scope pour filtrer par statut
+    public function scopeByStatus($query, $status)
+    {
+        return $query->where('status', $status);
+    }
+
+    // Scope pour filtrer par poste
+    public function scopeByPosition($query, $positionId)
+    {
+        return $query->where('position_id', $positionId);
+    }
 
     // Employés actifs
     public function scopeActive($query)
@@ -48,10 +71,16 @@ class Employee extends Model
         return $query->where('status', 'actif');
     }
 
-    // Filtrer par poste
-    public function scopeByPosition($query, $positionId)
+    // Employés inactifs
+    public function scopeInactive($query)
     {
-        return $query->where('position_id', $positionId);
+        return $query->where('status', 'inactif');
+    }
+
+    // Employés suspendus
+    public function scopeSuspended($query)
+    {
+        return $query->where('status', 'suspendu');
     }
 
     /**

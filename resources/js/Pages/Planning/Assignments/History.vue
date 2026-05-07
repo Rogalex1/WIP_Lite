@@ -13,7 +13,7 @@
           label="Retour"
           icon="pi pi-arrow-left"
           severity="secondary"
-          @click="$inertia.visit(route('planning-assignments.index'))"
+          @click="$inertia.visit(planningAssignmentRoute('index'))"
         />
       </div>
 
@@ -47,8 +47,11 @@
 </template>
 
 <script setup>
-import AppLayout from '@/Layouts/AppLayout.vue'
+import AppLayout from '@/Layouts/AdminLayout.vue'
 import { Button, Card, Tag, DataTable, Column } from 'primevue'
+import { useRoleRoutes } from '@/Composables/useRoleRoutes.js'
+
+const { planningAssignmentRoute } = useRoleRoutes()
 
 const props = defineProps({
   assignment: Object,

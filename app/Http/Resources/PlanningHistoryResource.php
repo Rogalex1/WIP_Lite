@@ -15,7 +15,7 @@ class PlanningHistoryResource extends JsonResource
             'new_status' => $this->new_status,
             'changed_by' => $this->user?->name,
             'reason' => $this->reason,
-            'created_at' => $this->created_at->format('d/m/Y H:i'),
+            'created_at' => $this->created_at->format('Y-m-d H:i:s'),
         ];
     }
 }

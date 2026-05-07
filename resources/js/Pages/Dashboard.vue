@@ -4,10 +4,18 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head } from '@inertiajs/vue3';
 import { useToast } from 'primevue/usetoast';
 import Toast from 'primevue/toast';
+import { Link } from '@inertiajs/vue3';
+import Button from 'primevue/button';
+import Card from 'primevue/card';
 const toast = useToast();
 
-onMounted( () =>{
-    toast.add({ severity: 'info', summary: 'Info', detail: 'Message Content', life: 3000 })
+onMounted(() => {
+    toast.add({
+        severity: 'success',
+        summary: 'Bienvenue 👋',
+        detail: 'Heureux de vous revoir sur votre tableau de bord !',
+        life: 4000
+    });
 });
 
 
@@ -16,26 +24,8 @@ onMounted( () =>{
 
 <template>
     <Head title="Dashboard" />
-    <AuthenticatedLayout>
-        <template #header>
-            <Toast />
-            <h2
-                class="text-xl font-semibold leading-tight text-gray-800"
-            >
-                Dashboard
-            </h2>
-        </template>
 
-        <div class="py-12">
-            <div class="mx-auto max-w-7xl sm:px-6 lg:px-8">
-                <div
-                    class="overflow-hidden bg-white shadow-sm sm:rounded-lg"
-                >
-                    <div class="p-6 text-gray-900">
-                        You're logged in!
-                    </div>
-                </div>
-            </div>
-        </div>
-    </AuthenticatedLayout>
+        <Toast />
+
+
 </template>

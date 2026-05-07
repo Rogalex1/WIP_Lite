@@ -22,8 +22,8 @@ class PlanningModelResource extends JsonResource
             'sunday_hours' => $this->sunday_hours,
             'total_hours' => $this->total_hours,
             'created_by' => $this->creator?->name,
-            'created_at' => $this->created_at->format('d/m/Y'),
-            'updated_at' => $this->updated_at->format('d/m/Y'),
+            'created_at' => $this->created_at->format('Y-m-d H:i:s'),
+            'updated_at' => $this->updated_at->format('Y-m-d H:i:s'),
         ];
     }
 }

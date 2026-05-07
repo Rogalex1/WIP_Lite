@@ -2,14 +2,16 @@
 
 import { useConfirm } from 'primevue/useconfirm'
 import { useForm } from '@inertiajs/vue3'
-import AppLayout from '@/Layouts/AppLayout.vue'
+import AppLayout from '@/Layouts/AdminLayout.vue'
 import { Button, DataTable, Column, Tag, Message, ConfirmDialog } from 'primevue'
+import { useRoleRoutes } from '@/Composables/useRoleRoutes.js'
 
 const props = defineProps({
   assignments: Object,
 })
 
 const confirm = useConfirm()
+const { planningAssignmentRoute } = useRoleRoutes()
 
 function statusSeverity(status) {
   const map = {
@@ -29,7 +31,7 @@ function valider(assignment) {
     acceptLabel: 'Valider',
     rejectLabel: 'Annuler',
     accept: () => {
-      useForm({}).patch(route('planning-assignments.validate', assignment.id))
+      useForm({}).patch(planningAssignmentRoute('validate', assignment.id))
     },
   })
 }
@@ -43,7 +45,7 @@ function suspendre(assignment) {
     rejectLabel: 'Annuler',
     acceptClass: 'p-button-warning',
     accept: () => {
-      useForm({}).patch(route('planning-assignments.suspend', assignment.id))
+      useForm({}).patch(planningAssignmentRoute('suspend', assignment.id))
     },
   })
 }
@@ -57,7 +59,7 @@ function terminer(assignment) {
     rejectLabel: 'Annuler',
     acceptClass: 'p-button-danger',
     accept: () => {
-      useForm({}).patch(route('planning-assignments.terminate', assignment.id))
+      useForm({}).patch(planningAssignmentRoute('terminate', assignment.id))
     },
   })
 }
@@ -73,7 +75,7 @@ function terminer(assignment) {
         <Button
           label="Nouvelle affectation"
           icon="pi pi-plus"
-          @click="$inertia.visit(route('planning-assignments.create'))"
+          @click="$inertia.visit(planningAssignmentRoute('create'))"
         />
       </div>
 
@@ -134,7 +136,7 @@ function terminer(assignment) {
                 severity="info"
                 text
                 v-tooltip="'Voir'"
-                @click="$inertia.visit(route('planning-assignments.show', data.id))"
+                @click="$inertia.visit(planningAssignmentRoute('show', data.id))"
               />
 
               <!-- Modifier -->
@@ -144,7 +146,7 @@ function terminer(assignment) {
                 text
                 v-tooltip="'Modifier'"
                 :disabled="data.status === 'validé'"
-                @click="$inertia.visit(route('planning-assignments.edit', data.id))"
+                @click="$inertia.visit(planningAssignmentRoute('edit', data.id))"
               />
 
               <!-- Valider -->
@@ -183,7 +185,7 @@ function terminer(assignment) {
                 severity="secondary"
                 text
                 v-tooltip="'Historique'"
-                @click="$inertia.visit(route('planning-assignments.history', data.id))"
+                @click="$inertia.visit(planningAssignmentRoute('history', data.id))"
               />
 
             </div>

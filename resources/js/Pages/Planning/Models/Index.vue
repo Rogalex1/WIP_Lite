@@ -8,7 +8,7 @@
         <Button 
           label="Nouveau modèle" 
           icon="pi pi-plus" 
-          @click="$inertia.visit(route('planning-models.create'))" 
+          @click="$inertia.visit(planningModelRoute('create'))" 
         />
       </div>
 
@@ -43,13 +43,13 @@
                 icon="pi pi-eye" 
                 severity="info" 
                 text 
-                @click="$inertia.visit(route('planning-models.show', data.id))" 
+                @click="$inertia.visit(planningModelRoute('show', data.id))" 
               />
               <Button 
                 icon="pi pi-pencil" 
                 severity="warning" 
                 text 
-                @click="$inertia.visit(route('planning-models.edit', data.id))" 
+                @click="$inertia.visit(planningModelRoute('edit', data.id))" 
               />
               <Button 
                 icon="pi pi-trash" 
@@ -73,14 +73,16 @@
 import { Button, DataTable, Column, Tag, Message } from 'primevue'
 import { useConfirm } from 'primevue/useconfirm'
 import { router } from '@inertiajs/vue3'
-import AppLayout from '@/Layouts/AppLayout.vue'
+import AppLayout from '@/Layouts/AdminLayout.vue'
 import { ConfirmDialog } from 'primevue'
+import { useRoleRoutes } from '@/Composables/useRoleRoutes.js'
 
 const props = defineProps({
   models: Object,
 })
 
 const confirm = useConfirm()
+const { planningModelRoute } = useRoleRoutes()
 
 function confirmDelete(model) {
   confirm.require({
@@ -91,7 +93,7 @@ function confirmDelete(model) {
     rejectLabel: 'Annuler',
     acceptClass: 'p-button-danger',
     accept: () => {
-      router.delete(route('planning-models.destroy', model.id))
+      router.delete(planningModelRoute('destroy', model.id))
     },
   })
 }

@@ -10,6 +10,22 @@ use Inertia\Inertia;
 
 class PlanningModelController extends Controller
 {
+    /**
+     * Détermine le préfixe de route selon le rôle de l'utilisateur
+     */
+    private function getRoutePrefix(): string
+    {
+        return auth()->user()->role?->name === 'admin' ? 'admin' : 'cp';
+    }
+
+    /**
+     * Génère le nom de route complet avec le bon préfixe
+     */
+    private function getRouteName(string $action): string
+    {
+        return $this->getRoutePrefix() . '.planning-models.' . $action;
+    }
+
     public function index()
     {
        
@@ -35,7 +51,7 @@ class PlanningModelController extends Controller
         ]);
 
         return redirect()
-            ->route('planning-models.index')
+            ->route($this->getRouteName('index'))
             ->with('success', 'Modèle de planning créé avec succès.');
     }
 
@@ -60,7 +76,7 @@ class PlanningModelController extends Controller
         $planningModel->update($request->validated());
 
         return redirect()
-            ->route('planning-models.index')
+            ->route($this->getRouteName('index'))
             ->with('success', 'Modèle de planning mis à jour avec succès.');
     }
 
@@ -77,7 +93,7 @@ class PlanningModelController extends Controller
         $planningModel->delete();
 
         return redirect()
-            ->route('planning-models.index')
+            ->route($this->getRouteName('index'))
             ->with('success', 'Modèle de planning supprimé avec succès.');
     }
 }

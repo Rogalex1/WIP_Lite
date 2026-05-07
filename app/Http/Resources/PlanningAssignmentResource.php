@@ -20,15 +20,22 @@ class PlanningAssignmentResource extends JsonResource
                 'id' => $this->planningModel->id,
                 'name' => $this->planningModel->name,
                 'total_hours' => $this->planningModel->total_hours,
+                'monday_hours' => $this->planningModel->monday_hours,
+                'tuesday_hours' => $this->planningModel->tuesday_hours,
+                'wednesday_hours' => $this->planningModel->wednesday_hours,
+                'thursday_hours' => $this->planningModel->thursday_hours,
+                'friday_hours' => $this->planningModel->friday_hours,
+                'saturday_hours' => $this->planningModel->saturday_hours,
+                'sunday_hours' => $this->planningModel->sunday_hours,
             ],
-            'start_date' => $this->start_date->format('d/m/Y'),
-            'end_date' => $this->end_date?->format('d/m/Y'),
+            'start_date' => $this->start_date->format('Y-m-d'),
+            'end_date' => $this->end_date?->format('Y-m-d'),
             'status' => $this->status,
             'validated_by' => $this->validator
                 ? $this->validator->first_name . ' ' . $this->validator->last_name
                 : null,
-            'validated_at' => $this->validated_at?->format('d/m/Y H:i'),
-            'created_at' => $this->created_at->format('d/m/Y'),
+            'validated_at' => $this->validated_at?->format('Y-m-d H:i:s'),
+            'created_at' => $this->created_at->format('Y-m-d H:i:s'),
         ];
     }
 }
