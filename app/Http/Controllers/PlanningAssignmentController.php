@@ -186,5 +186,22 @@ class PlanningAssignmentController extends Controller
 
         return back()->with('success', 'Affectation terminée avec succès.');
     }
-   
+
+    public function indexSup()
+    {
+        $employee = auth()->user()->employee;
+
+        $assignments = PlanningAssignment::with(['employee', 'planningModel', 'validator'])
+            ->whereHas('employee', function ($query) use ($employee) {
+                $query->whereHas('assignments', function ($q) use ($employee) {
+                    $q->where('manager_id', $employee->id);
+                });
+            })
+            ->latest()
+            ->paginate(10);
+
+        return Inertia::render('Planning/Assignments/Index', [
+            'assignments' => PlanningAssignmentResource::collection($assignments),
+        ]);
+    }   
 }

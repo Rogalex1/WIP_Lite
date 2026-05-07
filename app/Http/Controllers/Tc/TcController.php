@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Tc;
 
 use App\Http\Controllers\Controller;
+use App\Http\Controllers\PlanningAssignmentVontroller;
 use App\Models\Assignment;
 use App\Models\Campaign;
 use App\Models\Employee;
@@ -39,5 +40,20 @@ class TcController extends Controller
     public function planning()
     {
         return Inertia::render('Dashboard/TCDashboard');
+    }
+
+    public function myPlanning()
+    {
+        $employee = auth()->user()->employee;
+
+        $assignment = PlanningAssignment::with(['planningModel', 'validator'])
+            ->where('employee_id', $employee->id)
+            ->whereIn('status', ['validé', 'en attente'])
+            ->latest()
+            ->first();
+
+        return Inertia::render('Planning/TC/MyPlanning', [
+            'assignment' => $assignment ? (new \App\Http\Resources\PlanningAssignmentResource($assignment))->resolve() : null,
+        ]);
     }
 }

@@ -46,33 +46,65 @@ Route::middleware('auth')->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
 
+///////////////////////Routes CEDRIC ////////////////////////////////////////////////
 
 
+///////////////////////Routes MAXSON ////////////////////////////////////////////////
 
-
-    ///////////////////////Routes CEDRIC ////////////////////////////////////////////////
-    // --- Modèles de planning ---
+// Admin   acces total via toutes les routes 
+Route::middleware(['auth', 'admin'])->group(function () {
     Route::resource('planning-models', PlanningModelController::class)->parameters(['planning-models' => 'planningModel']);
-
-    // --- Affectations ---
     Route::resource('planning-assignments', PlanningAssignmentController::class)->parameters(['planning-assignments' => 'planningAssignment']);
-
-    // --- Actions spéciales sur une affectation ---
-    Route::patch('planning-assignments/{planningAssignment}/validate',[PlanningAssignmentController::class, 'validateAssignment'])->name('planning-assignments.validate');
-
-    Route::patch('planning-assignments/{planningAssignment}/suspend',[PlanningAssignmentController::class, 'suspend'])->name('planning-assignments.suspend');
-
-    Route::patch('planning-assignments/{planningAssignment}/terminate',[PlanningAssignmentController::class, 'terminate'])->name('planning-assignments.terminate');
-
-
-    // --- Historique ---
-    Route::get(
-        'planning-assignments/{planningAssignment}/history',
-        [PlanningAssignmentController::class, 'history']
-    )->name('planning-assignments.history');
+    Route::patch('planning-assignments/{planningAssignment}/validate', [PlanningAssignmentController::class, 'validateAssignment'])->name('planning-assignments.validate');
+    Route::patch('planning-assignments/{planningAssignment}/suspend', [PlanningAssignmentController::class, 'suspend'])->name('planning-assignments.suspend');
+    Route::patch('planning-assignments/{planningAssignment}/terminate', [PlanningAssignmentController::class, 'terminate'])->name('planning-assignments.terminate');
+    Route::get('planning-assignments/{planningAssignment}/history', [PlanningAssignmentController::class, 'history'])->name('planning-assignments.history');
 });
 
+// CP   acces total via toutes les routes /comme l'admin 
+Route::middleware(['auth', 'cp'])->group(function () {
+    Route::resource('planning-models', PlanningModelController::class)->parameters(['planning-models' => 'planningModel']);
+    Route::resource('planning-assignments', PlanningAssignmentController::class)->parameters(['planning-assignments' => 'planningAssignment']);
+    Route::patch('planning-assignments/{planningAssignment}/validate', [PlanningAssignmentController::class, 'validateAssignment'])->name('planning-assignments.validate');
+    Route::patch('planning-assignments/{planningAssignment}/suspend', [PlanningAssignmentController::class, 'suspend'])->name('planning-assignments.suspend');
+    Route::patch('planning-assignments/{planningAssignment}/terminate', [PlanningAssignmentController::class, 'terminate'])->name('planning-assignments.terminate');
+    Route::get('planning-assignments/{planningAssignment}/history', [PlanningAssignmentController::class, 'history'])->name('planning-assignments.history');
+});
 
+// SUP   lecture de tous se qui lui est affecté
+Route::middleware(['auth', 'sup'])->group(function () {
+    Route::get('planning-models', [PlanningModelController::class, 'index'])->name('planning-models.index');
+    Route::get('planning-models/{planningModel}', [PlanningModelController::class, 'show'])->name('planning-models.show');
+    Route::get('planning-assignments', [PlanningAssignmentController::class, 'indexSup'])->name('planning-assignments.index');
+    Route::get('planning-assignments/{planningAssignment}', [PlanningAssignmentController::class, 'show'])->name('planning-assignments.show');
+});
+
+// TC   peut voir son planning 
+Route::middleware(['auth', 'tc'])->group(function () {
+    Route::get('/tc/dashboard', [TcController::class, 'index'])->name('tc.dashboard');
+    Route::get('/tc/my-planning', [TcController::class, 'myPlanning'])->name('tc.my-planning');
+});
+
+    //   // --- Modèles de planning ---
+    // Route::resource('planning-models', PlanningModelController::class)->parameters(['planning-models' => 'planningModel']);
+
+    // // --- Affectations ---
+    // Route::resource('planning-assignments', PlanningAssignmentController::class)->parameters(['planning-assignments' => 'planningAssignment']);
+
+    // // --- Actions spéciales sur une affectation ---
+    // Route::patch('planning-assignments/{planningAssignment}/validate', [PlanningAssignmentController::class, 'validateAssignment'])->name('planning-assignments.validate');
+
+    // Route::patch('planning-assignments/{planningAssignment}/suspend', [PlanningAssignmentController::class, 'suspend'])->name('planning-assignments.suspend');
+
+    // Route::patch('planning-assignments/{planningAssignment}/terminate', [PlanningAssignmentController::class, 'terminate'])->name('planning-assignments.terminate');
+
+
+//     // --- Historique ---
+//     Route::get(
+//         'planning-assignments/{planningAssignment}/history',
+//         [PlanningAssignmentController::class, 'history']
+//     )->name('planning-assignments.history');
+});
 
 ///////////////////////Routes STEVEN ////////////////////////////////////////////////
 
@@ -81,60 +113,11 @@ Route::middleware('auth')->group(function () {
 
 
 
-///////////////////////Routes MAXSON ////////////////////////////////////////////////
-
-Route::middleware(['auth', 'admin'])->group(function () {
-
-    Route::get('/admin/dashboard', [AdminController::class, 'index'])
-        ->name('admin.dashboard');
-});
-
-Route::middleware(['auth', 'cp'])->group(function () {
-
-    Route::get('/cp/dashboard', [CpController::class, 'index'])
-        ->name('cp.dashboard');
-});
-
-Route::middleware(['auth', 'sup'])->group(function () {
-
-    Route::get('/sup/dashboard', [SupController::class, 'index'])
-        ->name('sup.dashboard');
-});
-
-Route::middleware(['auth','tc'])->group(function () {
-
-    Route::get('/tc/dashboard', [TcController::class, 'index'])
-        ->name('tc.dashboard');
-    Route::get('/tc/planning', [TcController::class, 'planning'])->name('tc.planning');
-});
-
-
 ///////////////////////Routes OTHITHI ////////////////////////////////////////////////
-
-
-
-
-
-
-
-
-
-
 
 ///////////////////////Routes DYLAN ////////////////////////////////////////////////
 
-
-
-
-
-
-
-
-
-
-
 ///////////////////////Routes ROGALEX ////////////////////////////////////////////////
-
 Route::get('/test-notif', function () {
     $user = auth()->user();
     $user->notify(new PlanningPublicated());
@@ -147,23 +130,8 @@ Route::get('/test-sidebar', function () {
     return back()->with('success', 'Notification créée !');
 });
 
-
-
-
-// Route::get('/cp/dashboard', function () {
-//     return Inertia::render('CP/Dashboard', [
-//         // On envoie des données de test pour remplir tes composants
-//         'stats' => [
-//             'teams_count' => 12,
-//             'pending_plannings' => 4
-//         ],
-//         'my_teams' => [
-//             ['id' => 1, 'name' => 'Alice Martin', 'initials' => 'AM', 'campaign' => 'Project Alpha'],
-//             ['id' => 2, 'name' => 'Kevin Durand', 'initials' => 'KD', 'campaign' => 'Project Beta'],
-//             ['id' => 3, 'name' => 'Sara Ben', 'initials' => 'SB', 'campaign' => 'Project Alpha'],
-//         ]
-//     ]);
-// })->middleware(['auth'])->name('cp.dashboard');
-
-
-require __DIR__.'/auth.php';
+//route cedric 
+Route::middleware(['auth', 'admin'])->get('/admin/dashboard', [AdminController::class, 'index'])->name('admin.dashboard');
+Route::middleware(['auth', 'cp'])->get('/cp/dashboard', [CpController::class, 'index'])->name('cp.dashboard');
+Route::middleware(['auth', 'sup'])->get('/sup/dashboard', [SupController::class, 'index'])->name('sup.dashboard');
+require __DIR__ . '/auth.php';

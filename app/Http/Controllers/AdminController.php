@@ -32,7 +32,8 @@ class AdminController extends Controller
                 'role' => $assign->employee->position->name ?? 'Non défini',
                 'campaign_name' => $assign->campaign->name,
                 'status' =>  $assign->employee->status, // Ou une logique de statut réelle
-            ]),
-    ]);
+                ]),
+                ]);
+                
     }
 }
