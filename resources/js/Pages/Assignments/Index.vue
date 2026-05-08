@@ -1,13 +1,16 @@
 <script setup>
 import AdminLayout from "@/Layouts/AdminLayout.vue";
+import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout.vue";
+import TCLayout from "@/Layouts/TCLayout.vue";
 import { ref, computed, watch, onMounted} from "vue";
-import { useForm, router } from "@inertiajs/vue3";
+import { useForm, router, Head } from "@inertiajs/vue3"; // Ajout de Head
 import Dialog from "primevue/dialog";
 import Select from "primevue/select";
 import ConfirmDialog from "primevue/confirmdialog";
 import { useConfirm } from "primevue/useconfirm";
 import Tag from "primevue/tag";
 import { useToast } from "primevue/usetoast";
+import Toast from "primevue/toast";
 
 const toast = useToast();
 
@@ -15,7 +18,17 @@ const props = defineProps({
     campaignsTree: Array,
     availableEmployees: Array,
     campaigns: Array,
+    userRole: String,
+    isAdmin: Boolean
 });
+
+// Déterminer le layout selon le rôle
+const currentLayout = computed(() => {
+    if (props.isAdmin) return AdminLayout;
+    if (props.userRole === 'tc') return TCLayout;
+    return AuthenticatedLayout;
+});
+
 const searchQuery = ref("");
 const selectedPositionFilter = ref(null);
 const confirm = useConfirm();
@@ -88,27 +101,17 @@ const formatDate = (dateString) => {
 };
 
 const vivierByPosition = computed(() => {
-    const assignedIds =
-        props.campaignsTree?.reduce((acc, campaign) => {
-            if (campaign.assignments) {
-                campaign.assignments.forEach((a) => acc.push(a.employee_id));
-            }
-            return acc;
-        }, []) || [];
-
     const available =
         props.availableEmployees?.filter((emp) => {
-            const isNotAssigned = !assignedIds.includes(emp.id);
             const matchesSearch = (emp.first_name + " " + emp.last_name)
                 .toLowerCase()
                 .includes(searchQuery.value.toLowerCase());
 
-            // FILTRE PAR POSTE
             const matchesPosition = selectedPositionFilter.value
                 ? emp.position_id === selectedPositionFilter.value
                 : true;
 
-            return isNotAssigned && matchesSearch && matchesPosition;
+            return matchesSearch && matchesPosition;
         }) || [];
 
     return {
@@ -128,13 +131,60 @@ const openAssignModal = (emp) => {
 
 const confirmRelease = (id) => {
     confirm.require({
-        header: "Désaffectation",
-        message: "L'agent sera remis dans le vivier disponible.",
-        icon: "pi pi-info-circle",
-        acceptLabel: "Confirmer",
-        acceptClass: "p-button-danger p-button-sm",
-        accept: () => router.delete(route("assignments.release", id)),
+        message: 'Êtes-vous sûr de vouloir libérer cette ressource ? Cette action peut avoir un impact en cascade sur les subordonnés.',
+        header: 'Confirmation de libération',
+        icon: 'pi pi-exclamation-triangle',
+        rejectProps: {
+            label: 'Annuler',
+            severity: 'secondary',
+            outlined: true
+        },
+        acceptProps: {
+            label: 'Libérer',
+            severity: 'danger'
+        },
+        accept: () => {
+            router.delete(route("assignments.release", id), {
+                onSuccess: () => {
+                    toast.add({
+                        severity: 'success',
+                        summary: 'Succès',
+                        detail: 'Ressource libérée avec succès',
+                        life: 3000
+                    });
+                }
+            });
+        }
     });
+};
+
+// Vérifier si le rôle peut créer des affectations
+const canCreateAssignments = computed(() => {
+    return props.isAdmin || props.userRole === 'cp';
+});
+
+// Vérifier si le rôle peut désaffecter
+const canRelease = computed(() => {
+    return props.isAdmin || props.userRole === 'cp' || props.userRole === 'sup';
+});
+
+// Vérifier s'il faut afficher le vivier
+const showVivierPanel = computed(() => {
+    return props.isAdmin || props.userRole === 'cp';
+});
+
+// Obtenir le titre selon le rôle
+const getTitle = () => {
+    switch(props.userRole) {
+        case 'cp':
+            return 'Gestion de mon équipe';
+        case 'sup':
+            return 'Mon équipe';
+        case 'tc':
+            return 'Mes affectations';
+        default:
+            return 'Plateau de Production';
+    }
 };
 
 onMounted(() => {
@@ -148,14 +198,18 @@ onMounted(() => {
 </script>
 
 <template>
+    <Head :title="getTitle()" />
     <ConfirmDialog />
-    <AdminLayout>
+    <component :is="currentLayout">
     <Toast/>
     <div class="p-8 bg-[#FBFDFF] min-h-screen font-sans text-slate-700">
-        <div class="flex flex-col xl:flex-row gap-10 max-w-[1800px] mx-auto">
-            <div class="flex-1 space-y-10">
+        <div :class="[
+            'flex flex-col gap-10 max-w-[1800px] mx-auto',
+            showVivierPanel ? 'xl:flex-row' : ''
+        ]">
+            <div :class="['space-y-10', showVivierPanel ? 'flex-1' : 'w-full']">
                 <header
-                    class="flex justify-between items-center pb-2 border-b border-slate-100"
+                    class="flex justify-between items-center pb-2 border-b border-orange-100"
                 >
                     <div>
                         <p
@@ -166,47 +220,53 @@ onMounted(() => {
                         <h1
                             class="text-3xl font-extrabold text-slate-900 tracking-tighter"
                         >
-                            Plateau de Production
+                            {{ getTitle() }}
                         </h1>
                     </div>
                     <Tag
-                        :value="`${activeCampaigns.length} Campagnes Actives`"
-                        severity="secondary"
-                        class="!bg-slate-100 !text-slate-600 !rounded-full !px-4"
+                        :value="`${activeCampaigns.length} Campagne${activeCampaigns.length > 1 ? 's' : ''}`"
+                        severity="warning"
+                        class="!bg-orange-50 !text-orange-600 !rounded-full !px-4"
                     />
                 </header>
+
+                <!-- Message pour TC -->
+                <div v-if="props.userRole === 'tc' && activeCampaigns.length === 0" class="text-center py-20 bg-white rounded-3xl border-2 border-dashed border-slate-100">
+                    <i class="pi pi-folder-open text-slate-200 text-5xl mb-4"></i>
+                    <p class="text-slate-400 font-medium italic">Vous n'êtes assigné à aucune campagne.</p>
+                </div>
 
                 <div
                     v-for="campaign in activeCampaigns"
                     :key="campaign.id"
-                    class="bg-white rounded-3xl border border-slate-100 shadow-sm p-8"
+                    class="bg-white rounded-3xl border border-orange-100 shadow-xl shadow-orange-200/20 p-8 hover:border-orange-200 transition-all duration-300"
                 >
                     <div
-                        class="flex justify-between items-center mb-8 pb-4 border-b border-slate-100"
+                        class="flex justify-between items-center mb-8 pb-4 border-b border-orange-50"
                     >
                         <div class="flex items-center gap-3">
                             <div
-                                class="p-2.5 bg-slate-100 rounded-xl text-slate-500"
+                                class="p-2.5 bg-orange-50 rounded-xl text-orange-500"
                             >
                                 <i class="pi pi-building text-lg"></i>
                             </div>
                             <h2
-                                class="text-2xl font-bold text-slate-800 tracking-tight"
+                                class="text-2xl font-black text-slate-800 tracking-tighter uppercase"
                             >
                                 {{ campaign.name }}
                             </h2>
                         </div>
                         <div
-                            class="flex gap-3 items-center bg-slate-50 px-4 py-2 rounded-full border border-slate-100"
+                            class="flex gap-3 items-center bg-orange-50/50 px-4 py-2 rounded-full border border-orange-100"
                         >
-                            <span class="text-sm font-medium text-slate-500"
+                            <span class="text-xs font-black text-slate-500 uppercase tracking-tight"
                                 >{{
                                     getCampaignStats(campaign).total
                                 }}
                                 Collaborateurs</span
                             >
-                            <span class="text-slate-200">|</span>
-                            <span class="text-sm font-semibold text-orange-600"
+                            <span class="text-orange-200">|</span>
+                            <span class="text-xs font-black text-orange-600 uppercase tracking-tight"
                                 >{{ getCampaignStats(campaign).tcs }} TC</span
                             >
                         </div>
@@ -222,33 +282,34 @@ onMounted(() => {
                                 class="grid grid-cols-1 md:grid-cols-[280px,1fr] gap-8 items-start"
                             >
                                 <div
-                                    class="flex flex-col items-center justify-center p-6 bg-orange-50 rounded-2xl border border-orange-100 text-center shadow-inner-sm"
+                                    class="flex flex-col items-center justify-center p-6 bg-white rounded-3xl border border-orange-100 text-center shadow-xl shadow-orange-200/20"
                                 >
                                     <div
-                                        class="w-16 h-16 rounded-full bg-orange-500 flex items-center justify-center text-white mb-4 shadow-lg shadow-orange-100"
+                                        class="w-16 h-16 rounded-2xl bg-orange-500 flex items-center justify-center text-white mb-4 shadow-lg shadow-orange-200"
                                     >
                                         <i class="pi pi-star-fill text-2xl"></i>
                                     </div>
                                     <p
-                                        class="font-bold text-slate-900 text-lg leading-tight"
+                                        class="font-black text-slate-900 text-lg leading-tight uppercase tracking-tight"
                                     >
                                         {{ cp.employee.first_name }}
                                         {{ cp.employee.last_name }}
                                     </p>
                                     <p
-                                        class="text-[11px] text-orange-700 font-semibold uppercase tracking-wider mt-1"
+                                        class="text-[10px] text-orange-600 font-black uppercase tracking-[0.2em] mt-2"
                                     >
                                         Chef de Projet
                                     </p>
-                                    <p class="text-[10px] text-slate-400 mt-3">
-                                        Depuis le
-                                        {{ formatDate(cp.created_at) }}
+                                    <div class="h-[1px] w-12 bg-orange-100 my-4"></div>
+                                    <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest">
+                                        Depuis le {{ formatDate(cp.created_at) }}
                                     </p>
+                                    
                                     <button
+                                        v-if="props.userRole === 'cp' || props.isAdmin"
                                         @click="confirmRelease(cp.id)"
-                                        class="mt-4 text-xs p-button-text p-button-secondary p-button-sm"
+                                        class="mt-6 w-full py-2.5 bg-slate-50 hover:bg-red-50 text-slate-400 hover:text-red-500 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all border border-slate-100 hover:border-red-100"
                                     >
-                                        <i class="pi pi-sign-out mr-1"></i>
                                         Désaffecter
                                     </button>
                                 </div>
@@ -270,19 +331,19 @@ onMounted(() => {
                                             cp.employee_id,
                                         )"
                                         :key="sup.id"
-                                        class="bg-slate-50 rounded-2xl p-6 border border-slate-100 shadow-sm"
+                                        class="bg-orange-50/20 rounded-2xl p-6 border border-orange-100 shadow-sm hover:border-orange-200 transition-all"
                                     >
                                         <div
-                                            class="flex items-center justify-between mb-5 pb-3 border-b border-slate-200/60"
+                                            class="flex items-center justify-between mb-5 pb-3 border-b border-orange-100"
                                         >
                                             <div
                                                 class="flex items-center gap-3"
                                             >
                                                 <i
-                                                    class="pi pi-user text-emerald-500"
+                                                    class="pi pi-user text-orange-500"
                                                 ></i>
                                                 <span
-                                                    class="font-semibold text-slate-800"
+                                                    class="font-black text-slate-800 uppercase text-xs tracking-tight"
                                                     >{{
                                                         sup.employee.first_name
                                                     }}
@@ -292,22 +353,24 @@ onMounted(() => {
                                                 >
                                                 <Tag
                                                     value="SUP"
-                                                    severity="success"
-                                                    class="!text-[9px] !px-2 !py-0.5"
+                                                    severity="warning"
+                                                    class="!text-[9px] !px-2 !py-0.5 !bg-orange-500 !text-white"
                                                 />
                                             </div>
+                                            <!-- Bouton désaffecter visible pour admin/CP/SUP -->
                                             <button
+                                                v-if="canRelease"
                                                 @click="confirmRelease(sup.id)"
-                                                class="text-slate-400 hover:text-red-500"
+                                                class="text-slate-300 hover:text-red-500 transition-colors"
                                             >
                                                 <i
-                                                    class="pi pi-times-circle"
+                                                    class="pi pi-sign-out text-lg"
                                                 ></i>
                                             </button>
                                         </div>
 
                                         <div
-                                            class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3"
+                                            class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4"
                                         >
                                             <div
                                                 v-for="tc in getTCs(
@@ -315,47 +378,38 @@ onMounted(() => {
                                                     sup.employee_id,
                                                 )"
                                                 :key="tc.id"
-                                                class="p-3.5 bg-white border border-slate-100 rounded-xl group flex justify-between items-center shadow-sm hover:border-orange-100 hover:shadow-md transition-all"
+                                                class="flex justify-between items-center p-4 bg-white rounded-xl border border-orange-100 shadow-sm hover:shadow-md transition-all group/tc"
                                             >
-                                                <div class="flex flex-col">
-                                                    <span
-                                                        class="text-sm font-semibold text-slate-700"
-                                                        >{{
-                                                            tc.employee
-                                                                .first_name
-                                                        }}</span
+                                                <div
+                                                    class="flex items-center gap-2"
+                                                >
+                                                    <div
+                                                        class="w-6 h-6 rounded-lg bg-orange-100 flex items-center justify-center text-[10px] text-orange-600 font-black"
                                                     >
-                                                    <span
-                                                        class="text-[10px] text-slate-400"
-                                                        >Le
                                                         {{
-                                                            formatDate(
-                                                                tc.created_at,
+                                                            tc.employee.first_name.charAt(
+                                                                0,
                                                             )
+                                                        }}
+                                                    </div>
+                                                    <span
+                                                        class="text-[11px] font-bold text-slate-700 uppercase"
+                                                        >{{
+                                                            tc.employee.first_name
                                                         }}</span
                                                     >
                                                 </div>
                                                 <button
+                                                    v-if="canRelease"
                                                     @click="
                                                         confirmRelease(tc.id)
                                                     "
-                                                    class="opacity-0 group-hover:opacity-100 text-slate-300 hover:text-red-400 transition-opacity"
+                                                    class="text-slate-200 hover:text-red-500 opacity-0 group-hover/tc:opacity-100 transition-all"
                                                 >
                                                     <i
-                                                        class="pi pi-trash text-[11px]"
+                                                        class="pi pi-times text-[10px]"
                                                     ></i>
                                                 </button>
-                                            </div>
-                                            <div
-                                                v-if="
-                                                    getTCs(
-                                                        campaign,
-                                                        sup.employee_id,
-                                                    ).length === 0
-                                                "
-                                                class="col-span-full text-center py-4 text-xs text-slate-400 italic"
-                                            >
-                                                Pas encore de téléconseillers
                                             </div>
                                         </div>
                                     </div>
@@ -366,7 +420,8 @@ onMounted(() => {
                 </div>
             </div>
 
-            <aside class="w-full xl:w-96 flex-shrink-0">
+            <!-- Vivier disponible visible pour admin et CP uniquement -->
+            <aside v-if="showVivierPanel" class="w-full xl:w-96 flex-shrink-0">
                 <div
                     class="bg-white rounded-3xl border border-slate-100 shadow-sm p-7 sticky top-10"
                 >
@@ -424,18 +479,6 @@ onMounted(() => {
                             {{ pos.l }}
                         </button>
                     </div>
-                    <!-- BARRE DE RECHERCHE DINGUERIE -->
-                    <div class="relative mb-6">
-                        <i
-                            class="pi pi-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-sm"
-                        ></i>
-                        <input
-                            v-model="searchQuery"
-                            type="text"
-                            placeholder="Rechercher un nom..."
-                            class="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-100 rounded-2xl text-sm focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 outline-none transition-all"
-                        />
-                    </div>
 
                     <div
                         class="space-y-6 max-h-[75vh] overflow-y-auto pr-3 custom-scrollbar"
@@ -475,6 +518,7 @@ onMounted(() => {
                                     </div>
 
                                     <button
+                                        v-if="canCreateAssignments"
                                         @click="openAssignModal(emp)"
                                         class="w-9 h-9 flex items-center justify-center bg-slate-50 text-slate-400 rounded-xl group-hover:bg-[#FF7A1A] group-hover:text-white transition-all shadow-sm"
                                     >
@@ -506,7 +550,9 @@ onMounted(() => {
         </div>
     </div>
 
+    <!-- Dialog d'affectation visible pour admin/CP uniquement -->
     <Dialog
+        v-if="canCreateAssignments"
         v-model:visible="displayModal"
         modal
         header="Affectation"
@@ -620,7 +666,7 @@ onMounted(() => {
             </button>
         </div>
     </Dialog>
-    </AdminLayout>
+    </component>
 </template>
 
 <style scoped>

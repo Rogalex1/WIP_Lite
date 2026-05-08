@@ -11,6 +11,8 @@ import Dropdown from "primevue/dropdown";
 import Tag from "primevue/tag";
 import Dialog from "primevue/dialog";
 import Toolbar from "primevue/toolbar";
+import ConfirmDialog from "primevue/confirmdialog";
+import { useConfirm } from "primevue/useconfirm";
 
 // Props depuis le contrôleur
 const props = defineProps({
@@ -21,8 +23,7 @@ const props = defineProps({
 
 // État réactif
 const toast = useToast();
-const deleteDialog = ref(false);
-const employeeToDelete = ref(null);
+const confirm = useConfirm();
 const statusChangeDialog = ref(false);
 const statusChangeData = ref({ employee: null, newStatus: "" });
 
@@ -151,34 +152,40 @@ const getStatusLabel = (status) => {
 
 // Confirmer la suppression
 const confirmDelete = (employee) => {
-    employeeToDelete.value = employee;
-    deleteDialog.value = true;
-};
-
-// Supprimer un employé
-const deleteEmployee = () => {
-    if (employeeToDelete.value) {
-        router.delete(route("employees.destroy", employeeToDelete.value.id), {
-            onSuccess: () => {
-                deleteDialog.value = false;
-                employeeToDelete.value = null;
-                toast.add({
-                    severity: "success",
-                    summary: "Succès",
-                    detail: "Employé supprimé avec succès",
-                    life: 3000,
-                });
-            },
-            onError: () => {
-                toast.add({
-                    severity: "error",
-                    summary: "Erreur",
-                    detail: "Une erreur est survenue lors de la suppression",
-                    life: 3000,
-                });
-            },
-        });
-    }
+    confirm.require({
+        message: `Êtes-vous sûr de vouloir supprimer l'employé ${employee.first_name} ${employee.last_name} ?`,
+        header: 'Confirmation de suppression',
+        icon: 'pi pi-exclamation-triangle',
+        rejectProps: {
+            label: 'Annuler',
+            severity: 'secondary',
+            outlined: true
+        },
+        acceptProps: {
+            label: 'Supprimer',
+            severity: 'danger'
+        },
+        accept: () => {
+            router.delete(route("employees.destroy", employee.id), {
+                onSuccess: () => {
+                    toast.add({
+                        severity: "success",
+                        summary: "Succès",
+                        detail: "Employé supprimé avec succès",
+                        life: 3000,
+                    });
+                },
+                onError: () => {
+                    toast.add({
+                        severity: "error",
+                        summary: "Erreur",
+                        detail: "Une erreur est survenue lors de la suppression",
+                        life: 3000,
+                    });
+                },
+            });
+        }
+    });
 };
 
 // Confirmer le changement de statut
@@ -221,23 +228,25 @@ const executeStatusChange = () => {
 </script>
 
 <template>
-    <Head title="Employés" />
+    <Head title="Gestion des Employés" />
+    <ConfirmDialog />
 
-    <AuthenticatedLayout>
-        <template #header>
+    <AdminLayout>
+        <div class="space-y-8">
             <div class="flex justify-between items-center">
-                <h2 class="text-xl font-semibold leading-tight text-gray-800">
-                    Gestion des Employés
-                </h2>
+                <div class="flex items-center gap-3">
+                    <div class="w-2 h-8 bg-[#FF7A1A] rounded-full"></div>
+                    <h2 class="text-xl font-black text-slate-800 tracking-tighter uppercase">
+                        Gestion des Collaborateurs
+                    </h2>
+                </div>
                 <Link :href="route('employees.create')">
-                    <Button
-                        label="Nouvel Employé"
-                        icon="pi pi-plus"
-                        class="p-button-primary"
-                    />
+                    <button class="bg-[#FF7A1A] hover:bg-orange-600 text-white font-black py-3 px-6 rounded-xl transition-all shadow-lg shadow-orange-200 text-xs tracking-widest uppercase flex items-center gap-2">
+                        <i class="pi pi-user-plus"></i>
+                        Ajouter un collaborateur
+                    </button>
                 </Link>
             </div>
-        </template>
 
         <div class="py-6">
             <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
@@ -415,46 +424,6 @@ const executeStatusChange = () => {
             </div>
         </div>
 
-        <!-- Dialog de confirmation de suppression -->
-        <Dialog
-            v-model:visible="deleteDialog"
-            :style="{ width: '450px' }"
-            header="Confirmation de Suppression"
-            :modal="true"
-        >
-            <div class="flex align-items-center justify-content-center">
-                <i
-                    class="pi pi-exclamation-triangle mr-3"
-                    style="font-size: 2rem; color: #f87171"
-                />
-                <span v-if="employeeToDelete">
-                    Êtes-vous sûr de vouloir supprimer l'employé
-                    <b
-                        >{{ employeeToDelete.first_name }}
-                        {{ employeeToDelete.last_name }}</b
-                    >
-                    ?<br />
-                    <small class="text-gray-500"
-                        >Cette action est réversible.</small
-                    >
-                </span>
-            </div>
-            <template #footer>
-                <Button
-                    label="Annuler"
-                    icon="pi pi-times"
-                    class="p-button-text"
-                    @click="deleteDialog = false"
-                />
-                <Button
-                    label="Supprimer"
-                    icon="pi pi-trash"
-                    class="p-button-danger"
-                    @click="deleteEmployee"
-                />
-            </template>
-        </Dialog>
-
         <!-- Dialog de confirmation de changement de statut -->
         <Dialog
             v-model:visible="statusChangeDialog"
@@ -505,5 +474,6 @@ const executeStatusChange = () => {
                 />
             </template>
         </Dialog>
-    </AuthenticatedLayout>
+        </div>
+    </AdminLayout>
 </template>

@@ -13,25 +13,36 @@ use Notification;
 class SupController extends Controller
 {
     public function index()
-{
-    return Inertia::render('Dashboard/SUPDashboard', [
-        'stats' => [
-            'employees_count' => Employee::count(),
-            'campaigns_count' => Campaign::where('status', 'active')->count(), // Ajuste selon tes colonnes
-            'pending_count'   => Employee::whereDoesntHave('assignments')->count(), // Ceux qui n'ont pas de mission
-            'alerts_count'    => 5, // Tu pourras lier ça à une logique d'erreurs plus tard
-        ],
-        'recent_assignments' => Assignment::with(['employee', 'campaign'])
-            ->latest()
-            ->take(5)
+    {
+        $user = auth()->user();
+        $employee = Employee::where('user_id', $user->id)->firstOrFail();
+
+        // Campagnes où il est SUP
+        $campaignIds = Assignment::where('employee_id', $employee->id)
+            ->where('position_id', 2)
+            ->where('status', 'active')
+            ->pluck('campaign_id');
+
+        // Agents sous sa supervision directe
+        $myAgents = Assignment::where('manager_id', $employee->id)
+            ->where('status', 'active')
+            ->where('position_id', 3) // TC
+            ->with(['employee', 'campaign'])
             ->get()
             ->map(fn($assign) => [
-                'id' => $assign->id,
-                'employee_name' => $assign->employee->first_name . ' ' . $assign->employee->last_name,
-                'role' => $assign->employee->position->name ?? 'Non défini',
-                'campaign_name' => $assign->campaign->name,
-                'status' =>  $assign->employee->status, // Ou une logique de statut réelle
-            ]),
-    ]);
-}
+                'id' => $assign->employee->id,
+                'name' => $assign->employee->first_name . ' ' . $assign->employee->last_name,
+                'last_action' => 'En production sur ' . $assign->campaign->name,
+                'campaign_id' => $assign->campaign_id,
+            ]);
+
+        return Inertia::render('Dashboard/SUPDashboard', [
+            'stats' => [
+                'present_count' => $myAgents->count(),
+                'absent_count' => 0, // À lier plus tard
+                'total_team' => $myAgents->count(),
+            ],
+            'my_agents' => $myAgents,
+        ]);
+    }
 }

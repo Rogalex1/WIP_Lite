@@ -16,7 +16,7 @@ return new class extends Migration {
             $table->foreignId('campaign_id')->constrained();
             $table->foreignId('manager_id')->nullable()->constrained('employees');
             $table->foreignId('position_id')->constrained();
-            $table->string('status')->default('actif');
+            $table->string('status')->default('active');
             $table->date('start_date');
             $table->date('end_date')->nullable();
             $table->timestamps();

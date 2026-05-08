@@ -56,13 +56,17 @@ Route::middleware('auth')->group(function () {
 
 
 Route::middleware(['auth', 'verified'])->group(function () {
-    // Cette ligne génère automatiquement : campaigns.index, campaigns.store, campaigns.update, campaigns.destroy
+    // Gestion des Campagnes (CRUD classique)
     Route::resource('campaigns', CampaignController::class);
-});
-Route::middleware(['auth'])->group(function () {
+
+    // Gestion des Affectations (Plateau de Production)
+    // C'est ici que tes vues Index.vue, CPIndex.vue et SUPIndex.vue puisent leurs données
     Route::get('/assignments', [AssignmentController::class, 'index'])->name('assignments.index');
     Route::post('/assignments', [AssignmentController::class, 'store'])->name('assignments.store');
-    Route::delete('/assignments/{assignment}', [AssignmentController::class, 'release'])->name('assignments.release');
+    
+    // Correction cruciale : Laravel resource/delete attend un DELETE.
+    // Ton bouton dans la vue utilise router.delete(route('assignments.release', id))
+    Route::delete('/assignments/{assignment}/release', [AssignmentController::class, 'release'])->name('assignments.release');
 });
 
 
@@ -77,6 +81,8 @@ Route::middleware(['auth', 'admin'])->group(function () {
 
     Route::get('/admin/dashboard', [AdminController::class, 'index'])
         ->name('admin.dashboard');
+    Route::get('/admin/history', [AdminController::class, 'history'])
+        ->name('admin.history');
 
     Route::post('/admin/no_users', [AdminController::class, 'no_users'])->name('no_users');
 });

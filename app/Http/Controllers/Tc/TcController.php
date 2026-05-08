@@ -14,25 +14,30 @@ class TcController extends Controller
 {
     public function index()
     {
-        
+        $user = auth()->user();
+        $employee = Employee::where('user_id', $user->id)->firstOrFail();
+
+        $assignment = Assignment::where('employee_id', $employee->id)
+            ->where('status', 'active')
+            ->with(['campaign', 'manager'])
+            ->first();
+
+        $todaySchedule = [
+            'morning_start' => '08:00',
+            'morning_end' => '12:00',
+            'lunch_break' => '12:00 - 13:00',
+            'afternoon_start' => '13:00',
+            'afternoon_end' => '17:00',
+        ];
+
         return Inertia::render('Dashboard/TCDashboard', [
-        'stats' => [
-            'employees_count' => Employee::count(),
-            'campaigns_count' => Campaign::where('status', 'active')->count(), // Ajuste selon tes colonnes
-            'pending_count'   => Employee::whereDoesntHave('assignments')->count(), // Ceux qui n'ont pas de mission
-            'alerts_count'    => 5, // Tu pourras lier ça à une logique d'erreurs plus tard
-        ],
-        'recent_assignments' => Assignment::with(['employee', 'campaign'])
-            ->latest()
-            ->take(5)
-            ->get()
-            ->map(fn($assign) => [
-                'id' => $assign->id,
-                'employee_name' => $assign->employee->first_name . ' ' . $assign->employee->last_name,
-                'role' => $assign->employee->position->name ?? 'Non défini',
-                'campaign_name' => $assign->campaign->name,
-                'status' =>  $assign->employee->status, // Ou une logique de statut réelle
-            ]),
-    ]);
+            'my_stats' => [
+                'hours_done' => 142,
+                'quality_score' => 95,
+                'off_days' => 12,
+            ],
+            'today_schedule' => $todaySchedule,
+            'current_campaign' => $assignment ? $assignment->campaign : null,
+        ]);
     }
 }

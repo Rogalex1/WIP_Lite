@@ -27,7 +27,7 @@ class AssignmentFactory extends Factory
             'campaign_id' => Campaign::factory(),
             'manager_id' => Employee::inRandomOrder()->first()->id,
             'position_id' => Position::inRandomOrder()->first()->id,
-            'status' => fake()->randomElement(['actif', 'inactif', 'terminé']),
+            'status' => fake()->randomElement(['active', 'inactive', 'completed']),
             'start_date' => $startDate->format('Y-m-d'),
             'end_date' => fake()->randomElement([null, $endDate->format('Y-m-d')]),
         ];

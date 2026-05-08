@@ -40,7 +40,7 @@ class CampaignSeeder extends Seeder
                 'description' => 'Migration des serveurs locaux vers une infrastructure cloud sécurisée',
                 'start_date' => '2023-09-01',
                 'end_date' => '2024-03-31',
-                'status' => 'terminée',
+                'status' => 'completed',
             ],
             [
                 'name' => 'Data Analytics Platform',

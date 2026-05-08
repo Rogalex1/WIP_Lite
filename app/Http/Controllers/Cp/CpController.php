@@ -13,25 +13,45 @@ use Notification;
 class CpController extends Controller
 {
     public function index()
-{
-    return Inertia::render('Dashboard/CPDashboard', [
-        'stats' => [
-            'employees_count' => Employee::count(),
-            'campaigns_count' => Campaign::where('status', 'active')->count(), // Ajuste selon tes colonnes
-            'pending_count'   => Employee::whereDoesntHave('assignments')->count(), // Ceux qui n'ont pas de mission
-            'alerts_count'    => 5, // Tu pourras lier ça à une logique d'erreurs plus tard
-        ],
-        'recent_assignments' => Assignment::with(['employee', 'campaign'])
-            ->latest()
-            ->take(5)
+    {
+        $user = auth()->user();
+        $employee = Employee::where('user_id', $user->id)->firstOrFail();
+
+        // Campagnes gérées par le CP
+        $campaignIds = Assignment::where('employee_id', $employee->id)
+            ->where('position_id', 1)
+            ->where('status', 'active')
+            ->pluck('campaign_id');
+
+        $campaignsCount = $campaignIds->count();
+
+        // Agents sous sa responsabilité (SUP et TC sur ses campagnes)
+        $teamCount = Assignment::whereIn('campaign_id', $campaignIds)
+            ->where('status', 'active')
+            ->where('employee_id', '!=', $employee->id)
+            ->count();
+
+        // Liste des superviseurs sur ses campagnes
+        $myTeams = Assignment::whereIn('campaign_id', $campaignIds)
+            ->where('position_id', 2) // SUP
+            ->where('status', 'active')
+            ->with(['employee', 'campaign'])
             ->get()
             ->map(fn($assign) => [
-                'id' => $assign->id,
-                'employee_name' => $assign->employee->first_name . ' ' . $assign->employee->last_name,
-                'role' => $assign->employee->position->name ?? 'Non défini',
-                'campaign_name' => $assign->campaign->name,
-                'status' =>  $assign->employee->status, // Ou une logique de statut réelle
-            ]),
-    ]);
-}
+                'id' => $assign->employee->id,
+                'name' => $assign->employee->first_name . ' ' . $assign->employee->last_name,
+                'initials' => strtoupper(substr($assign->employee->first_name, 0, 1) . substr($assign->employee->last_name, 0, 1)),
+                'campaign' => $assign->campaign->name,
+                'campaign_id' => $assign->campaign_id,
+            ]);
+
+        return Inertia::render('Dashboard/CPDashboard', [
+            'stats' => [
+                'teams_count' => $teamCount,
+                'campaigns_count' => $campaignsCount,
+                'pending_plannings' => 0, // À lier plus tard
+            ],
+            'my_teams' => $myTeams,
+        ]);
+    }
 }

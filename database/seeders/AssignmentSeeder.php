@@ -39,7 +39,7 @@ class AssignmentSeeder extends Seeder
                 'campaign_id' => $campaign1->id,
                 'manager_id' => $emp2->id,
                 'position_id' => $posRH->id,
-                'status' => 'actif',
+                'status' => 'active',
                 'start_date' => '2024-01-15',
                 'end_date' => '2024-06-30',
             ];
@@ -51,7 +51,7 @@ class AssignmentSeeder extends Seeder
                 'campaign_id' => $campaign1->id,
                 'manager_id' => $emp2->id,
                 'position_id' => $posCP->id,
-                'status' => 'actif',
+                'status' => 'active',
                 'start_date' => '2024-01-20',
                 'end_date' => '2024-06-30',
             ];
@@ -63,7 +63,7 @@ class AssignmentSeeder extends Seeder
                 'campaign_id' => $campaign2->id,
                 'manager_id' => $emp1->id,
                 'position_id' => $posSUP->id,
-                'status' => 'actif',
+                'status' => 'active',
                 'start_date' => '2024-02-01',
                 'end_date' => '2024-12-31',
             ];
@@ -75,7 +75,7 @@ class AssignmentSeeder extends Seeder
                 'campaign_id' => $campaign2->id,
                 'manager_id' => $emp4->id,
                 'position_id' => $posCP->id,
-                'status' => 'actif',
+                'status' => 'active',
                 'start_date' => '2024-02-15',
                 'end_date' => '2024-12-31',
             ];
@@ -87,7 +87,7 @@ class AssignmentSeeder extends Seeder
                 'campaign_id' => $campaign3->id,
                 'manager_id' => $emp2->id,
                 'position_id' => $posSUP->id,
-                'status' => 'actif',
+                'status' => 'active',
                 'start_date' => '2024-03-15',
                 'end_date' => '2024-08-15',
             ];

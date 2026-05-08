@@ -11,6 +11,7 @@ import Aura from "@primevue/themes/aura";
 import ToastService from "primevue/toastservice";
 import ConfirmationService from "primevue/confirmationservice";
 import Tooltip from "primevue/tooltip";
+import BadgeDirective from 'primevue/badgedirective';
 import "../css/app.css";
 // import './bootstrap';
 
@@ -42,6 +43,7 @@ createInertiaApp({
             .use(ToastService)
             .use(ConfirmationService);
         app.directive("tooltip", Tooltip);
+        app.directive('badge', BadgeDirective);
 
         return app.mount(el);
     },

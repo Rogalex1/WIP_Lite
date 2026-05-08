@@ -1,241 +1,216 @@
 <script setup>
-import { ref } from "vue";
-import DropdownLink from "@/Components/DropdownLink.vue";
-import { Link, usePage, router } from "@inertiajs/vue3"; // Ajout de router pour le POST
-import OverlayPanel from "primevue/overlaypanel";
-import Button from "primevue/button";
+import { Link, usePage, router } from "@inertiajs/vue3";
+import { useToast } from "primevue/usetoast";
+import Toast from "primevue/toast";
+import ApplicationLogo from "@/Components/ApplicationLogo.vue";
 
-const op = ref();
 const page = usePage();
 
-const markAsRead = (id) => {
-    console.log("Marqué comme lu :", id);
+const isRouteActive = (routeName) => {
+    return route().current(routeName);
 };
 
-// Fonction pour gérer l'activation des comptes (Route POST 'no_users')
 const activateUsers = () => {
     router.post(route("no_users"));
 };
-
-// Vérifie si la route est active
-const isRouteActive = (routeName) => route().current(routeName);
 </script>
 
 <template>
-    <div
-        class="min-h-screen bg-slate-50 flex font-sans antialiased text-slate-900"
-    >
+    <div class="min-h-screen bg-slate-50 flex font-sans antialiased">
+        <Toast />
         <!-- Sidebar -->
         <aside
-            class="w-64 bg-slate-900 text-slate-300 flex-shrink-0 hidden md:flex flex-col border-r border-slate-800"
+            class="w-72 bg-slate-900 text-slate-300 flex-shrink-0 hidden lg:flex flex-col shadow-2xl border-r border-slate-800"
         >
-            <div class="h-16 flex items-center px-6 border-b border-slate-800">
-                <span class="text-white font-black tracking-tighter text-xl">
-                    WIP<span class="text-indigo-500">LITE</span>
-                </span>
+            <div class="h-24 flex items-center px-8 border-b border-slate-800/50">
+                <div class="flex items-center gap-3">
+                    <ApplicationLogo size="sm" class="shadow-none rounded-lg" />
+                    <span class="text-white font-black tracking-tighter text-2xl">
+                        WIP<span class="text-[#FF7A1A]">LITE</span>
+                    </span>
+                </div>
             </div>
 
-            <nav class="flex-1 p-4 space-y-1">
+            <nav class="flex-1 p-6 space-y-2 custom-scrollbar overflow-y-auto">
                 <p
-                    class="text-[10px] uppercase tracking-widest text-slate-500 font-bold mb-4 px-3"
+                    class="text-[10px] uppercase tracking-[0.2em] text-slate-500 font-black mb-6 px-4"
                 >
-                    Menu Principal
+                    Administration
                 </p>
 
-                <!-- Dashboard (Route: admin.dashboard) -->
+                <!-- Dashboard -->
                 <Link
                     :href="route('admin.dashboard')"
                     :class="[
                         isRouteActive('admin.dashboard')
-                            ? 'bg-slate-800 text-white'
+                            ? 'bg-[#FF7A1A] text-white shadow-lg shadow-orange-900/20'
                             : 'hover:bg-slate-800 hover:text-white',
                     ]"
-                    class="flex items-center p-3 rounded-xl transition-all duration-200 group"
+                    class="flex items-center p-4 rounded-2xl transition-all duration-300 group"
                 >
                     <i
-                        class="pi pi-home mr-3 text-lg"
+                        class="pi pi-th-large mr-4 text-xl"
                         :class="
                             isRouteActive('admin.dashboard')
-                                ? 'text-indigo-400'
-                                : 'text-slate-500 group-hover:text-indigo-400'
+                                ? 'text-white'
+                                : 'text-slate-500 group-hover:text-[#FF7A1A]'
                         "
                     ></i>
-                    <span class="font-medium">Dashboard</span>
+                    <span class="font-bold tracking-tight">Dashboard</span>
                 </Link>
 
-                <!-- Employés (Route: employees.index) -->
+                <!-- Employés -->
                 <Link
                     :href="route('employees.index')"
                     :class="[
                         isRouteActive('employees.*')
-                            ? 'bg-slate-800 text-white'
+                            ? 'bg-[#FF7A1A] text-white shadow-lg shadow-orange-900/20'
                             : 'hover:bg-slate-800 hover:text-white',
                     ]"
-                    class="flex items-center p-3 rounded-xl transition-all duration-200 group"
+                    class="flex items-center p-4 rounded-2xl transition-all duration-300 group"
                 >
                     <i
-                        class="pi pi-users mr-3 text-lg"
+                        class="pi pi-users mr-4 text-xl"
                         :class="
                             isRouteActive('employees.*')
-                                ? 'text-indigo-400'
-                                : 'text-slate-500 group-hover:text-indigo-400'
+                                ? 'text-white'
+                                : 'text-slate-500 group-hover:text-[#FF7A1A]'
                         "
                     ></i>
-                    <span class="font-medium">Employés</span>
+                    <span class="font-bold tracking-tight">Collaborateurs</span>
                 </Link>
 
-                <!-- Campagnes (Route: campaigns.index) -->
+                <!-- Campagnes -->
                 <Link
                     :href="route('campaigns.index')"
                     :class="[
                         isRouteActive('campaigns.*')
-                            ? 'bg-slate-800 text-white'
+                            ? 'bg-[#FF7A1A] text-white shadow-lg shadow-orange-900/20'
                             : 'hover:bg-slate-800 hover:text-white',
                     ]"
-                    class="flex items-center p-3 rounded-xl transition-all duration-200 group"
+                    class="flex items-center p-4 rounded-2xl transition-all duration-300 group"
                 >
                     <i
-                        class="pi pi-flag mr-3 text-lg"
+                        class="pi pi-flag mr-4 text-xl"
                         :class="
                             isRouteActive('campaigns.*')
-                                ? 'text-indigo-400'
-                                : 'text-slate-500 group-hover:text-indigo-400'
+                                ? 'text-white'
+                                : 'text-slate-500 group-hover:text-[#FF7A1A]'
                         "
                     ></i>
-                    <span class="font-medium">Campagnes</span>
+                    <span class="font-bold tracking-tight">Campagnes</span>
                 </Link>
 
-                <!-- Assignations (Route: assignments.index) -->
+                <!-- Assignations -->
                 <Link
                     :href="route('assignments.index')"
                     :class="[
                         isRouteActive('assignments.index')
-                            ? 'bg-slate-800 text-white'
+                            ? 'bg-[#FF7A1A] text-white shadow-lg shadow-orange-900/20'
                             : 'hover:bg-slate-800 hover:text-white',
                     ]"
-                    class="flex items-center p-3 rounded-xl transition-all duration-200 group"
+                    class="flex items-center p-4 rounded-2xl transition-all duration-300 group"
                 >
                     <i
-                        class="pi pi-link mr-3 text-lg"
+                        class="pi pi-link mr-4 text-xl"
                         :class="
                             isRouteActive('assignments.index')
-                                ? 'text-indigo-400'
-                                : 'text-slate-500 group-hover:text-indigo-400'
+                                ? 'text-white'
+                                : 'text-slate-500 group-hover:text-[#FF7A1A]'
                         "
                     ></i>
-                    <span class="font-medium">Assignations</span>
+                    <span class="font-bold tracking-tight">Affectations</span>
                 </Link>
 
-                <!-- Activation des comptes (Route POST: no_users) -->
-                <!-- Note: On utilise un bouton ici car la route est en POST dans web.php -->
-                <button
-                    @click="activateUsers"
-                    class="w-full flex items-center p-3 rounded-xl transition-all duration-200 group hover:bg-slate-800 hover:text-white text-left"
-                >
-                    <i
-                        class="pi pi-user-plus mr-3 text-lg text-slate-500 group-hover:text-indigo-400"
-                    ></i>
-                    <span class="font-medium">Activation comptes</span>
-                </button>
+                <div class="pt-6 mt-6 border-t border-slate-800/50">
+                    <p class="text-[10px] uppercase tracking-[0.2em] text-slate-500 font-black mb-4 px-4">Système</p>
+                    <button
+                        @click="activateUsers"
+                        class="w-full flex items-center p-4 rounded-2xl transition-all duration-300 group hover:bg-slate-800 hover:text-white text-left"
+                    >
+                        <i
+                            class="pi pi-user-plus mr-4 text-xl text-slate-500 group-hover:text-[#FF7A1A]"
+                        ></i>
+                        <span class="font-bold tracking-tight">Activation</span>
+                    </button>
+                </div>
             </nav>
 
-            <!-- Profil Utilisateur -->
-            <div class="p-4 border-t border-slate-800">
-                <div
-                    class="bg-slate-800/50 p-3 rounded-xl flex items-center gap-3"
-                >
-                    <div
-                        class="w-8 h-8 rounded-lg bg-indigo-500 flex items-center justify-center text-white font-bold text-xs uppercase"
-                    >
-                        {{
-                            $page.props.auth.user?.name
-                                ? $page.props.auth.user.name
-                                      .substring(0, 2)
-                                      .toUpperCase()
-                                : "AD"
-                        }}
+            <!-- User Profile Section -->
+            <div class="p-6 border-t border-slate-800/50 bg-slate-900/50">
+                <div class="bg-slate-800/40 p-4 rounded-2xl flex items-center gap-4 border border-slate-700/30">
+                    <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-[#FF9E4F] to-[#FF7A1A] flex items-center justify-center text-white font-black text-sm shadow-lg">
+                        {{ $page.props.auth.user?.name?.substring(0, 2).toUpperCase() }}
                     </div>
                     <div class="overflow-hidden">
-                        <p class="text-xs font-bold text-white truncate">
-                            {{ $page.props.auth.user.name }}
+                        <p class="text-sm font-black text-white truncate tracking-tight">
+                            {{ $page.props.auth.user?.name || 'Admin' }}
                         </p>
-                        <p class="text-[10px] text-slate-500 truncate">
-                            {{ $page.props.auth.user.email }}
+                        <p class="text-[10px] text-slate-500 truncate font-bold uppercase tracking-tighter">
+                            Administrateur
                         </p>
                     </div>
+                    <Link :href="route('logout')" method="post" as="button" class="ml-auto text-slate-500 hover:text-white transition-colors">
+                        <i class="pi pi-power-off"></i>
+                    </Link>
                 </div>
             </div>
         </aside>
 
         <!-- Main Content -->
-        <div class="flex-1 flex flex-col">
-            <!-- Topbar -->
-            <header
-                class="h-16 bg-white/80 backdrop-blur-md sticky top-0 z-10 flex items-center justify-between px-8 border-b border-slate-200"
-            >
-                <h2 class="font-bold text-slate-800 tracking-tight">
-                    Administration
-                </h2>
-                <div class="flex items-center gap-3">
-                    <DropdownLink
-                        :href="route('logout')"
-                        method="post"
-                        as="button"
-                        class="text-sm font-semibold text-slate-600 hover:text-red-600"
-                    >
-                        Déconnexion
-                    </DropdownLink>
+        <main class="flex-1 flex flex-col h-screen overflow-hidden">
+            <!-- Top Header -->
+            <header class="h-20 bg-white border-b border-slate-200 flex items-center justify-between px-8 z-10 shadow-sm">
+                <div class="lg:hidden flex items-center gap-3">
+                    <ApplicationLogo size="xs" class="shadow-none rounded-lg" />
+                    <span class="text-slate-900 font-black tracking-tighter text-xl">
+                        WIP<span class="text-[#FF7A1A]">LITE</span>
+                    </span>
+                </div>
+                
+                <div class="hidden lg:flex items-center gap-2 text-slate-400">
+                    <i class="pi pi-search mr-2"></i>
+                    <span class="text-sm font-medium">Recherche globale...</span>
+                </div>
+
+                <div class="flex items-center gap-6">
+                    <button class="relative p-2 text-slate-400 hover:text-[#FF7A1A] transition-colors">
+                        <i class="pi pi-bell text-xl"></i>
+                        <span class="absolute top-1 right-1 w-2 h-2 bg-[#FF7A1A] rounded-full border-2 border-white"></span>
+                    </button>
                     <div class="h-8 w-[1px] bg-slate-200 mx-2"></div>
-                    <Button
-                        type="button"
-                        icon="pi pi-bell"
-                        @click="(event) => op.toggle(event)"
-                        v-badge.danger="
-                            $page.props.auth.notifications.length || null
-                        "
-                        text
-                        plain
-                        class="!p-2 !w-10 !h-10 !rounded-full hover:!bg-slate-100 transition-colors"
-                    />
+                    <span class="text-xs font-black text-slate-400 uppercase tracking-widest">{{ new Date().toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' }) }}</span>
                 </div>
             </header>
 
-            <OverlayPanel
-                ref="op"
-                style="width: 380px"
-                class="shadow-2xl border-slate-200 rounded-2xl overflow-hidden"
-            >
-                <!-- Contenu des notifications identique -->
-                <div
-                    class="p-4 border-b border-slate-100 flex justify-between items-center"
-                >
-                    <span class="font-bold text-slate-800">Notifications</span>
-                </div>
-                <div class="max-h-[400px] overflow-y-auto">
-                    <div v-if="$page.props.auth.notifications.length > 0">
-                        <div
-                            v-for="notif in $page.props.auth.notifications"
-                            :key="notif.id"
-                            class="p-4 border-b border-slate-50 hover:bg-slate-50 cursor-pointer flex gap-4"
-                        >
-                            <div class="flex-1">
-                                <p class="text-sm text-slate-700">
-                                    {{ notif.data.message }}
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-                    <div v-else class="p-12 text-center text-slate-400">
-                        Tout est à jour !
-                    </div>
-                </div>
-            </OverlayPanel>
-
-            <main class="p-8 flex-1">
-                <div class="max-w-7xl mx-auto">
-                    <slot />
-                </div>
-            </main>
-        </div>
+            <div class="flex-1 overflow-y-auto custom-scrollbar bg-slate-50/50 p-8">
+                <slot />
+            </div>
+        </main>
     </div>
 </template>
+
+<style>
+.custom-scrollbar::-webkit-scrollbar {
+    width: 6px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+    background: rgba(15, 23, 42, 0.1);
+    border-radius: 10px;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: rgba(15, 23, 42, 0.2);
+}
+
+/* Transitions globales */
+.page-enter-active, .page-leave-active {
+    transition: opacity 0.3s ease, transform 0.3s ease;
+}
+.page-enter-from, .page-leave-to {
+    opacity: 0;
+    transform: translateY(10px);
+}
+</style>
