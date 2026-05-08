@@ -1,9 +1,12 @@
 <?php
 
+use App\Http\Controllers\AssignmentController;
+use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\CampaignController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\PlanningModelController;
 use App\Http\Controllers\PlanningAssignmentController;
-use App\Http\Controllers\ProfileController;
+
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\Cp\CpController;
 use App\Http\Controllers\Sup\SupController;
@@ -12,6 +15,7 @@ use App\Http\Controllers\EmployeeController;
 use App\Models\User;
 use App\Notifications\PlanningPublicated;
 use App\Notifications\NewEmployeeAdded;
+use App\Http\Controllers\UserController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -97,7 +101,15 @@ Route::middleware('auth')->group(function () {
 ///////////////////////Routes STEVEN ////////////////////////////////////////////////
 
 
-
+Route::middleware(['auth', 'verified'])->group(function () {
+    // Cette ligne génère automatiquement : campaigns.index, campaigns.store, campaigns.update, campaigns.destroy
+    Route::resource('campaigns', CampaignController::class);
+});
+Route::middleware(['auth'])->group(function () {
+    Route::get('/assignments', [AssignmentController::class, 'index'])->name('assignments.index');
+    Route::post('/assignments', [AssignmentController::class, 'store'])->name('assignments.store');
+    Route::delete('/assignments/{assignment}', [AssignmentController::class, 'release'])->name('assignments.release');
+});
 
 
 
@@ -111,6 +123,23 @@ Route::middleware(['auth', 'admin'])->group(function () {
 
     Route::post('/admin/no_users', [AdminController::class, 'no_users'])
         ->name('no_users');
+    Route::get('/admin/no_users', [AdminController::class, 'no_user'])->name('admin.no_users');
+
+    Route::get('/users', [UserController::class, 'index'])->name('users.index');
+
+    Route::get('/users/create', [UserController::class, 'create'])->name('users.create');
+
+    Route::post('/users', [UserController::class, 'store'])->name('users.store');
+
+    Route::get('/users/deactivated', [UserController::class, 'deactivated'])->name('users.deactivated');
+
+    Route::get('/users/{user}', [UserController::class, 'show'])->name('users.show');
+
+    Route::get('/users/{user}/edit', [UserController::class, 'edit'])->name('users.edit');
+
+    Route::put('/users/{user}', [UserController::class, 'update'])->name('users.update');
+    
+    Route::patch('/users/{user}/toggle-status', [UserController::class, 'toggleStatus'])->name('users.toggle-status');
 });
 
 Route::middleware(['auth', 'cp'])->group(function () {
@@ -200,6 +229,10 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/reporting/create', [ReportingController::class, 'create'])->name('reporting.create');
 
     Route::post('/reporting', [ReportingController::class, 'store'])->name('reporting.store');
+});
+
+Route::middleware(['auth'])->group(function () {
+    Route::resource('reporting', ReportingController::class);
 });
 
 

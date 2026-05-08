@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany; // <--- AJOUTER CECI
 
 class Campaign extends Model
 {
-    protected $fillable = ['name', 'start_date', 'end_date', 'status'];
+    protected $fillable = ['name','description','start_date', 'end_date', 'status'];
 
     public function assignments(): HasMany
     {

@@ -8,11 +8,25 @@ class EmployeeService
 {
     /**
      * Générer un matricule unique
+     * Vérifie que le matricule n'existe pas déjà en base de données
      */
     public function generateMatricule(): string
     {
+        $year = date('Y');
         $count = Employee::withTrashed()->count() + 1;
-        return 'EMP-' . date('Y') . '-' . str_pad($count, 4, '0', STR_PAD_LEFT);
+        
+        // Boucle pour trouver un matricule unique
+        while (true) {
+            $matricule = 'EMP-' . $year . '-' . str_pad($count, 4, '0', STR_PAD_LEFT);
+            
+            // Vérifier si le matricule existe déjà
+            if (!Employee::withTrashed()->where('matricule', $matricule)->exists()) {
+                return $matricule;
+            }
+            
+            // Incrémenter et réessayer
+            $count++;
+        }
     }
 
     /**

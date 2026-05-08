@@ -1,5 +1,5 @@
 <script setup>
-import { ref, watch, onMounted } from 'vue';
+import { ref, watch, onMounted, computed } from 'vue';
 import ApplicationLogo from '@/Components/ApplicationLogo.vue';
 import Dropdown from '@/Components/Dropdown.vue';
 import DropdownLink from '@/Components/DropdownLink.vue';
@@ -19,6 +19,22 @@ const toast = useToast();
 
 // Récupérer l'objet page d'Inertia qui contient les props partagées
 const page = usePage();
+
+// Détermine dynamiquement la route du dashboard selon le rôle
+const dashboardRoute = computed(() => {
+    const user = page.props.auth.user;
+    if (!user || !user.role) return 'login';
+    
+    // Mapping basé sur ton fichier web.php
+    const roleRoutes = {
+        'admin': 'admin.dashboard',
+        'cp': 'cp.dashboard',
+        'sup': 'sup.dashboard',
+        'tc': 'tc.dashboard'
+    };
+
+    return roleRoutes[user.role.name] || 'login';
+});
 
 /**
  * Fonction pour afficher les toasts basés sur les messages flash.
@@ -130,7 +146,7 @@ watch(
                         <div class="flex">
                             <!-- Logo -->
                             <div class="flex shrink-0 items-center">
-                                <Link :href="route('admin.dashboard')">
+                                <Link :href="route(dashboardRoute)">
                                     <ApplicationLogo
                                         class="block h-9 w-auto fill-current text-gray-800"
                                     />
@@ -142,32 +158,26 @@ watch(
                                 class="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex"
                             >
                                 <NavLink
-                                   :href="route('admin.dashboard')"
-                                    :active="route().current('dashboard')"
+                                   :href="route(dashboardRoute)"
+                                    :active="route().current(dashboardRoute)"
                                 >
                                     Dashboard
                                 </NavLink>
                             </div>
-<div class="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex">
-    <NavLink
-        :href="route('dashboard')"
-        :active="route().current('dashboard')"
-    >
-        Dashboard
-    </NavLink>
-    <NavLink
-        :href="route('planning-models.index')"
-        :active="route().current('planning-models.*')"
-    >
-        Modèles Planning
-    </NavLink>
-    <NavLink
-        :href="route('planning-assignments.index')"
-        :active="route().current('planning-assignments.*')"
-    >
-        Affectations
-    </NavLink>
-</div>
+                            <div class="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex">
+                                <NavLink
+                                    :href="route('planning-models.index')"
+                                    :active="route().current('planning-models.*')"
+                                >
+                                    Modèles Planning
+                                </NavLink>
+                                <NavLink
+                                    :href="route('planning-assignments.index')"
+                                    :active="route().current('planning-assignments.*')"
+                                >
+                                    Affectations
+                                </NavLink>
+                            </div>
                         </div>
 
                         <div class="hidden sm:ms-6 sm:flex sm:items-center">
@@ -269,8 +279,8 @@ watch(
                 >
                     <div class="space-y-1 pb-3 pt-2">
                         <ResponsiveNavLink
-                           :href="route('admin.dashboard')"
-                            :active="route().current('dashboard')"
+                           :href="route(dashboardRoute)"
+                            :active="route().current(dashboardRoute)"
                         >
                             Dashboard
                         </ResponsiveNavLink>

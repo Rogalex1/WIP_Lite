@@ -1,4 +1,29 @@
+<script setup>
+import { watch } from 'vue';
+import { Link, usePage } from '@inertiajs/vue3';
+import Toast from 'primevue/toast';
+import { useToast } from 'primevue/usetoast';
+
+const page = usePage();
+const toast = useToast();
+
+// Surveiller les messages flash
+watch(
+    () => page.props.flash,
+    (flash) => {
+        if (flash?.success) {
+            toast.add({ severity: 'success', summary: 'Succès', detail: flash.success, life: 4000 });
+        }
+        if (flash?.error) {
+            toast.add({ severity: 'error', summary: 'Erreur', detail: flash.error, life: 4000 });
+        }
+    },
+    { deep: true, immediate: true }
+);
+</script>
+
 <template>
+    <Toast position="top-center" />
     <div class="min-h-screen flex flex-col bg-sky-50">
         <header class="bg-sky-700 text-white p-4 shadow-md">
             <h1 class="text-center font-semibold">Ma Liste de Travail</h1>

@@ -17,9 +17,13 @@ import Calendar from 'primevue/calendar';
 import Dropdown from 'primevue/dropdown';
 import Textarea from 'primevue/textarea';
 import Button from 'primevue/button';
+import ConfirmDialog from 'primevue/confirmdialog';
+import { useConfirm } from "primevue/useconfirm"; // Import
+
+const confirm = useConfirm();
+const toast = useToast();
 
 const props = defineProps({ reports: Array, campaigns: Array });
-const toast = useToast();
 const visible = ref(false); // État du pop-up
 const isEdit = ref(false);
 
@@ -53,30 +57,59 @@ const editReport = (data) => {
 };
 
 const submitForm = () => {
+    // Formater la date en YYYY-MM-DD
+    const payload = { ...form.data() };
+    if (payload.report_date instanceof Date) {
+        payload.report_date = payload.report_date.toISOString().split('T')[0];
+    }
+
     if (isEdit.value) {
-        form.put(route('reporting.update', form.id), {
+        form.transform((data) => ({
+            ...data,
+            report_date: new Date(data.report_date).toISOString().split('T')[0]
+        })).put(route('reporting.update', form.id), {
             onSuccess: () => {
                 visible.value = false;
                 toast.add({ severity: 'success', summary: 'Succès', detail: 'Rapport mis à jour', life: 3000 });
             }
         });
     } else {
-        form.post(route('reporting.store'), {
+        form.transform((data) => ({
+            ...data,
+            report_date: new Date(data.report_date).toISOString().split('T')[0]
+        })).post(route('reporting.store'), {
             onSuccess: () => {
                 visible.value = false;
-                toast.add({ severity: 'success', summary: 'Céation', detail: 'Rapport enregistré et Notifié', life: 3000 });
+                toast.add({ severity: 'success', summary: 'Création', detail: 'Rapport enregistré', life: 3000 });
             }
         });
     }
 };
 
 const deleteReport = (id) => {
-    if(confirm('Supprimer ce rapport ?')) {
-        form.delete(route('reporting.destroy', id), {
-            onSuccess: () => toast.add({ severity: 'info', summary: 'Supprimé', detail: 'Rapport retiré', life: 3000 })
-        });
-    }
-};
+    confirm.require({
+        message: 'Êtes-vous sûr de vouloir supprimer ce rapport ?',
+        header: 'Confirmation de suppression',
+        icon: 'pi pi-exclamation-triangle',
+        rejectLabel: 'Annuler',
+        acceptLabel: 'Supprimer',
+        rejectClass: 'p-button-secondary p-button-outlined',
+        acceptClass: 'p-button-danger',
+        accept: () => {
+            // Logique Inertia si l'utilisateur accepte
+            form.delete(route('reporting.destroy', id), {
+                onSuccess: () => {
+                    toast.add({ 
+                        severity: 'info', 
+                        summary: 'Supprimé', 
+                        detail: 'Le rapport a été retiré avec succès', 
+                        life: 3000 
+                    });
+                },
+            });
+        }
+    });
+}
 
 // const props = defineProps({ reports: Array });
 
@@ -92,6 +125,7 @@ const getSeverity = (rate) => {
     <AdminLayout>
         <Head title="Reporting de Production" />
         <Toast />
+        <ConfirmDialog/>
 
         <div class="max-w-[1200px] mx-auto p-6 space-y-8">
             

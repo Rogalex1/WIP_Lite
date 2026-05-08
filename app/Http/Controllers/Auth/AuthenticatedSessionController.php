@@ -46,8 +46,9 @@ class AuthenticatedSessionController extends Controller
         $user = auth()->user();
 
         $route = $this->getDashboardRoute($user->role?->name);
-// dd($route);
-        return redirect()->intended(route($route));
+
+        return redirect()->intended(route($route))
+            ->with('success', 'Connexion réussie ! Heureux de vous revoir, ' . ($user->email ? explode('@', $user->email)[0] : 'utilisateur') . '.');
     }
 
     /**

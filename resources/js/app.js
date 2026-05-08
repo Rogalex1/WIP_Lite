@@ -1,19 +1,27 @@
 import "../css/app.css";
 import "primeicons/primeicons.css";
 
-// import "./bootstrap";
-
+// --------------------------------------------------------------------------
+// Inertia + Vue
+// --------------------------------------------------------------------------
 import { createInertiaApp } from "@inertiajs/vue3";
 import { resolvePageComponent } from "laravel-vite-plugin/inertia-helpers";
 import { createApp, h } from "vue";
 import { ZiggyVue } from "../../vendor/tightenco/ziggy";
 
+// --------------------------------------------------------------------------
+// PrimeVue
+// --------------------------------------------------------------------------
 import PrimeVue from "primevue/config";
 import ToastService from "primevue/toastservice";
 import ConfirmationService from "primevue/confirmationservice";
 import Tooltip from "primevue/tooltip";
+import BadgeDirective from "primevue/badgedirective";
+import Dialog from "primevue/dialog";
 
 import Aura from "@primeuix/themes/aura";
+
+// --------------------------------------------------------------------------
 
 const appName = import.meta.env.VITE_APP_NAME || "Laravel";
 
@@ -27,19 +35,27 @@ createInertiaApp({
         ),
 
     setup({ el, App, props, plugin }) {
-        const app = createApp({ render: () => h(App, props) });
+        const app = createApp({
+            render: () => h(App, props),
+        });
 
         app.use(plugin)
             .use(ZiggyVue)
             .use(PrimeVue, {
                 theme: {
                     preset: Aura,
+                    options: {
+                        prefix: "p",
+                        darkModeSelector: "none",
+                        cssLayer: false,
+                    },
                 },
             })
             .use(ToastService)
-            .use(ConfirmationService);
-
-        app.directive("tooltip", Tooltip);
+            .use(ConfirmationService)
+            .directive("tooltip", Tooltip)
+            .directive("badge", BadgeDirective)
+            .component("Dialog", Dialog);
 
         return app.mount(el);
     },

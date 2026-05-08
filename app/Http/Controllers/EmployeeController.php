@@ -75,10 +75,12 @@ class EmployeeController extends Controller
      */
     public function store(StoreEmployeeRequest $request): RedirectResponse
     {
-        $employee = $this->employeeService->create($request->validated());
-        auth()->user()->notify(new EmployeeCreatedNotification($employee));
         try {
+            // Créer l'employé une seule fois
             $employee = $this->employeeService->create($request->validated());
+            
+            // Envoyer la notification
+            auth()->user()->notify(new EmployeeCreatedNotification($employee));
 
             // Message de succès avec le nom de l'employé créé
             return redirect()->route('employees.index')

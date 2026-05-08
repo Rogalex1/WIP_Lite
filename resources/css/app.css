@@ -4,3 +4,44 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* On force le blanc sur TOUT le dialogue et ses sous-composants */
+:deep(.p-dialog), 
+:deep(.p-dialog-header), 
+:deep(.p-dialog-content), 
+:deep(.p-dialog-footer) {
+    background-color: #ffffff !important;
+    color: #1e293b !important;
+}
+
+/* On répare le Dropdown qui est devenu tout noir sur ta capture */
+:deep(.p-dropdown) {
+    background-color: #ffffff !important;
+    border: 1px solid #e2e8f0 !important;
+}
+
+:deep(.p-dropdown-label) {
+    color: #334155 !important;
+}
+
+:deep(.p-dropdown-trigger) {
+    color: #64748b !important;
+}
+
+/* On force le panneau de sélection du Dropdown (la liste qui s'ouvre) */
+:deep(.p-dropdown-panel) {
+    background-color: #ffffff !important;
+    color: #334155 !important;
+}
+
+/* On répare les inputs et textarea */
+:deep(.p-inputtext), :deep(.p-textarea) {
+    background-color: #ffffff !important;
+    color: #334155 !important;
+    border: 1px solid #e2e8f0 !important;
+}
+
+/* On change l'overlay (le fond gris derrière) pour qu'il ne soit pas si sombre */
+:deep(.p-dialog-mask) {
+    background-color: rgba(0, 0, 0, 0.2) !important;
+}

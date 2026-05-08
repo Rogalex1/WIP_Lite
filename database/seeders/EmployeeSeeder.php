@@ -99,27 +99,53 @@ class EmployeeSeeder extends Seeder
      */
     private function createTestEmployees(): void
     {
-        // Créer des employés avec des données connues pour les tests
         Employee::factory()->create([
-            'first_name' => 'Jean',
-            'last_name' => 'Dupont',
-            'email' => 'jean.dupont@entreprise.com',
-            'phone' => '+225 07 00 00 01',
-            'address' => '123 Rue de la République, Abidjan',
-            'position_id' => Position::where('code', 'CP')->first()->id,
-            'salary_base' => 500000,
-            'status' => 'actif',
-        ]);
+    'matricule' => 'EMP0001',
+    'first_name' => 'Jean',
+    'last_name' => 'Dupont',
+    'email' => 'jean.dupont@entreprise.com',
+    'phone' => '+225 07 00 00 01',
+    'address' => '123 Rue de la République, Abidjan',
+    'position_id' => Position::where('code', 'CP')->first()->id,
+    'salary_base' => 500000,
+    'status' => 'actif',
+]);
 
-        Employee::factory()->create([
-            'first_name' => 'Marie',
-            'last_name' => 'Curie',
-            'email' => 'marie.curie@entreprise.com',
-            'phone' => '+225 07 00 00 02',
-            'address' => '456 Avenue des Champs-Élysées, Abidjan',
-            'position_id' => Position::where('code', 'RH')->first()->id,
-            'salary_base' => 750000,
-            'status' => 'actif',
-        ]);
+Employee::factory()->create([
+    'matricule' => 'EMP0002',
+    'first_name' => 'Marie',
+    'last_name' => 'Curie',
+    'email' => 'marie.curie@entreprise.com',
+    'phone' => '+225 07 00 00 02',
+    'address' => '456 Avenue des Champs-Élysées, Abidjan',
+    'position_id' => Position::where('code', 'RH')->first()->id,
+    'salary_base' => 750000,
+    'status' => 'actif',
+]);
+
+Employee::factory()->create([
+    'matricule' => 'EMP0003',
+    'first_name' => 'Paul',
+    'last_name' => 'Koffi',
+    'email' => 'paul.koffi@entreprise.com',
+    'phone' => '+225 07 00 00 03',
+    'address' => 'Abidjan',
+    'position_id' => Position::where('code', 'CP')->first()->id,
+    'salary_base' => 400000,
+    'status' => 'actif',
+]);
+
+Employee::factory()->create([
+    'matricule' => 'EMP0004',
+    'first_name' => 'Awa',
+    'last_name' => 'Traoré',
+    'email' => 'awa.traore@entreprise.com',
+    'phone' => '+225 07 00 00 04',
+    'address' => 'Abidjan',
+    'position_id' => Position::where('code', 'RH')->first()->id,
+    'salary_base' => 450000,
+    'status' => 'actif',
+]);
+
     }
 }

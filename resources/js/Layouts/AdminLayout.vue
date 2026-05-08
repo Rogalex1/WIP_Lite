@@ -236,9 +236,6 @@ const isActive = (route) => page.url.startsWith(route);
             <header
                 class="h-16 bg-white/80 backdrop-blur-md sticky top-0 z-10 flex items-center justify-between px-8 border-b border-slate-200"
             >
-                        <div>
-
-            </div>
                 <h2 class="font-bold text-slate-800 tracking-tight">
                     Administration
                 </h2>
@@ -248,16 +245,16 @@ const isActive = (route) => page.url.startsWith(route);
                 </DropdownLink>
                 <div class="flex items-center gap-3">
                     <!-- Notification Button -->
-<!-- Un seul bouton propre qui porte le badge et l'événement -->
-    <Button
-        type="button"
-        icon="pi pi-bell"
-        @click="(event) => op.toggle(event)"
-        v-badge.danger="notifications.length || null"
-        text
-        plain
-        class="!p-2 !w-10 !h-10 !rounded-full hover:!bg-slate-100 transition-colors"
-    />
+                    <!-- Un seul bouton propre qui porte le badge et l'événement -->
+                    <Button
+                        type="button"
+                        icon="pi pi-bell"
+                        @click="(event) => op.toggle(event)"
+                        v-badge.danger="notifications.length || null"
+                        text
+                        plain
+                        class="!p-2 !w-10 !h-10 !rounded-full hover:!bg-slate-100 transition-colors"
+                    />
 
                     <div class="h-8 w-[1px] bg-slate-200 mx-2"></div>
 

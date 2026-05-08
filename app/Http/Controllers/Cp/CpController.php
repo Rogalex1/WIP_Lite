@@ -12,26 +12,42 @@ use Notification;
 
 class CpController extends Controller
 {
-    public function index()
+public function index()
 {
+    $cpEmployee = Employee::where('user_id', auth()->id())->first();
+
+    // 1. Assignments du CP
+    $assignments = Assignment::with(['employee', 'campaign'])
+        ->where('manager_id', $cpEmployee->id)
+        ->latest()
+        ->get();
+
+    // 2. Employés du CP
+    $employees = Employee::whereHas('assignments', function ($q) use ($cpEmployee) {
+        $q->where('manager_id', $cpEmployee->id);
+    })->get();
+
+    // 3. PLANNINGS (IMPORTANT)
+    // 👉 si planning est dans campaign
+    $plannings = Assignment::with(['campaign'])
+        ->where('manager_id', $cpEmployee->id)
+        ->whereHas('campaign', function ($q) {
+            $q->whereNotNull('id'); // adapte si status planning existe
+        })
+        ->get();
+
     return Inertia::render('Dashboard/CPDashboard', [
         'stats' => [
-            'employees_count' => Employee::count(),
-            'campaigns_count' => Campaign::where('status', 'active')->count(), // Ajuste selon tes colonnes
-            'pending_count'   => Employee::whereDoesntHave('assignments')->count(), // Ceux qui n'ont pas de mission
-            'alerts_count'    => 5, // Tu pourras lier ça à une logique d'erreurs plus tard
+            'employees_count' => $employees->count(),
+            'campaigns_count' => $assignments->pluck('campaign_id')->unique()->count(),
+            'pending_count'   => $assignments->where('status', 'pending')->count(),
         ],
-        'recent_assignments' => Assignment::with(['employee', 'campaign'])
-            ->latest()
-            ->take(5)
-            ->get()
-            ->map(fn($assign) => [
-                'id' => $assign->id,
-                'employee_name' => $assign->employee->first_name . ' ' . $assign->employee->last_name,
-                'role' => $assign->employee->position->name ?? 'Non défini',
-                'campaign_name' => $assign->campaign->name,
-                'status' =>  $assign->employee->status, // Ou une logique de statut réelle
-            ]),
+
+        'my_teams' => $employees,
+
+        // 👇 AJOUT IMPORTANT
+        'assignments' => $assignments,
+        'plannings' => $plannings,
     ]);
 }
 }

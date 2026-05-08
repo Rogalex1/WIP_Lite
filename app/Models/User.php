@@ -31,6 +31,7 @@ class User extends Authenticatable
         'password',
         'role_id',
         'email_verified_at',
+        'status'
     ];
 
     protected $hidden = [
@@ -54,4 +55,10 @@ class User extends Authenticatable
     public function employee (){
         return $this ->hasOne(Employee::class);
     }
+
+    public function reportings()
+{
+    // On utilise HasMany car un agent peut créer plusieurs rapports
+    return $this->hasMany(Reporting::class);
+}
 }

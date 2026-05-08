@@ -8,7 +8,15 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Assignment extends Model
 {
-    protected $fillable = ['employee_id', 'manager_id', 'campaign_id', 'position_id', 'status'];
+   protected $fillable = [
+    'employee_id', 
+    'manager_id', 
+    'campaign_id', 
+    'position_id', 
+    'status',
+    'start_date',  
+    'end_date'
+];
 
     public function employee(): BelongsTo
     {
