@@ -4,6 +4,9 @@ import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
 import Tag from 'primevue/tag';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
+import CPLayout from '@/Layouts/CPLayout.vue';
+import SUPLayout from '@/Layouts/SUPLayout.vue';
+import TCLayout from '@/Layouts/TCLayout.vue';
 
 import { ref, computed } from 'vue';
 import { useForm, usePage } from '@inertiajs/vue3';
@@ -22,8 +25,20 @@ import { useConfirm } from "primevue/useconfirm"; // Import
 
 const confirm = useConfirm();
 const toast = useToast();
+const page = usePage();
 
 const props = defineProps({ reports: Array, campaigns: Array });
+
+// Sélection dynamique du layout selon le rôle
+const currentLayout = computed(() => {
+    const role = page.props.auth.user.role.name;
+    if (role === 'admin') return AdminLayout;
+    if (role === 'cp') return CPLayout;
+    if (role === 'sup') return SUPLayout;
+    if (role === 'tc') return TCLayout;
+    return AdminLayout;
+});
+
 const visible = ref(false); // État du pop-up
 const isEdit = ref(false);
 
@@ -111,8 +126,6 @@ const deleteReport = (id) => {
     });
 }
 
-// const props = defineProps({ reports: Array });
-
 // Couleurs pour le taux de conversion
 const getSeverity = (rate) => {
     if (rate >= 15) return 'success';
@@ -122,7 +135,7 @@ const getSeverity = (rate) => {
 </script>
 
 <template>
-    <AdminLayout>
+    <component :is="currentLayout">
         <Head title="Reporting de Production" />
         <Toast />
         <ConfirmDialog/>
@@ -132,47 +145,70 @@ const getSeverity = (rate) => {
             <!-- Header Section -->
             <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
-                    <h1 class="text-3xl font-extrabold text-slate-900 tracking-tight">Production</h1>
-                    <p class="text-slate-500 mt-1">Suivi des performances et statistiques d'appels.</p>
+                    <h1 class="text-3xl font-extrabold text-slate-900 tracking-tight uppercase">Production</h1>
+                    <p class="text-slate-500 mt-1 font-medium">Suivi des performances et statistiques d'appels.</p>
                 </div>
                 <div class="flex items-center gap-3">
                     <div class="hidden sm:block text-right mr-2">
-                        <p class="text-xs font-bold text-slate-400 uppercase tracking-widest">Total</p>
-                        <p class="text-lg font-semibold text-slate-700">{{ reports.length }} Rapports</p>
+                        <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Total</p>
+                        <p class="text-lg font-black text-slate-700">{{ reports.length }} Rapports</p>
                     </div>
                     <Button 
-                        label="Nouveau Rapport" 
+                        label="Saisir Production" 
                         icon="pi pi-plus" 
                         @click="openNew" 
-                        class="!bg-indigo-600 !border-none hover:!bg-indigo-700 shadow-lg shadow-indigo-200" 
+                        class="!bg-[#FF7A1A] !border-none hover:!bg-slate-900 !rounded-xl !px-6 !py-3 !text-[10px] !font-black !uppercase !tracking-widest shadow-lg shadow-orange-100 transition-all" 
                     />
                 </div>
             </div>
 
+            <!-- Stats Overview (Responsive Grid) -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                <div class="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm">
+                    <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Total Appels</p>
+                    <p class="text-2xl font-black text-slate-800">{{ reports.reduce((acc, r) => acc + r.calls_count, 0) }}</p>
+                </div>
+                <div class="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm">
+                    <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Total Succès</p>
+                    <p class="text-2xl font-black text-orange-600">{{ reports.reduce((acc, r) => acc + r.success_count, 0) }}</p>
+                </div>
+                <div class="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm">
+                    <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Taux Moyen</p>
+                    <p class="text-2xl font-black text-slate-800">
+                        {{ reports.length ? (reports.reduce((acc, r) => acc + parseFloat(r.conversion_rate), 0) / reports.length).toFixed(2) : 0 }}%
+                    </p>
+                </div>
+                <div class="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm">
+                    <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">DMC Moyen</p>
+                    <p class="text-2xl font-black text-slate-800">
+                        {{ reports.length ? (reports.reduce((acc, r) => acc + parseFloat(r.dmc), 0) / reports.length).toFixed(1) : 0 }} min
+                    </p>
+                </div>
+            </div>
+
             <!-- Table Card -->
-            <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+            <div class="bg-white rounded-3xl border border-slate-200 shadow-xl shadow-slate-200/20 overflow-hidden">
                 <DataTable 
                     :value="reports" 
-                    responsiveLayout="scroll" 
+                    responsiveLayout="stack" 
+                    breakpoint="960px"
                     class="p-datatable-custom"
                     :rows="10"
                     paginator
                     paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink"
                 >
-                    <Column field="report_date" header="Date" sortable>
+                    <Column field="report_date" header="Date" sortable class="font-bold">
                         <template #body="{ data }">
-                            <div class="flex flex-col">
-                                <span class="font-semibold text-slate-700">
-                                    {{ new Date(data.report_date).toLocaleDateString('fr-FR') }}
-                                </span>
-                            </div>
+                            <span class="text-slate-700">
+                                {{ new Date(data.report_date).toLocaleDateString('fr-FR') }}
+                            </span>
                         </template>
                     </Column>
                     
-                    <Column field="user.name" header="Agent" v-if="$page.props.auth.user.role !== 'tc'">
+                    <Column field="user.name" header="Agent" v-if="$page.props.auth.user.role.name !== 'tc'">
                         <template #body="{ data }">
                             <div class="flex items-center gap-2">
-                                <div class="w-7 h-7 rounded-full bg-indigo-50 flex items-center justify-center text-indigo-600 text-xs font-bold">
+                                <div class="w-7 h-7 rounded-full bg-orange-50 flex items-center justify-center text-[#FF7A1A] text-xs font-bold">
                                     {{ data.user?.name?.charAt(0) || 'A' }}
                                 </div>
                                 <span class="text-slate-600 font-medium">{{ data.user?.name }}</span>
@@ -182,7 +218,7 @@ const getSeverity = (rate) => {
                     
                     <Column field="campaign.name" header="Campagne">
                         <template #body="{ data }">
-                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-800">
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-800 border border-slate-200">
                                 {{ data.campaign?.name }}
                             </span>
                         </template>
@@ -205,12 +241,12 @@ const getSeverity = (rate) => {
                         </template>
                     </Column>
 
-                    <!-- BLOC ACTIONS CORRECTEMENT PLACÉ ICI -->
+                    <!-- BLOC ACTIONS -->
                     <Column header="Actions" headerClass="text-right" bodyClass="text-right">
                         <template #body="{ data }">
                             <div class="flex justify-end gap-1">
-                                <Button icon="pi pi-pencil" text rounded severity="secondary" @click="editReport(data)" />
-                                <Button icon="pi pi-trash" text rounded severity="danger" @click="deleteReport(data.id)" />
+                                <Button icon="pi pi-pencil" text rounded severity="secondary" @click="editReport(data)" v-if="$page.props.auth.user.id === data.user_id || $page.props.auth.user.role.name === 'admin'" />
+                                <Button icon="pi pi-trash" text rounded severity="danger" @click="deleteReport(data.id)" v-if="$page.props.auth.user.id === data.user_id || $page.props.auth.user.role.name === 'admin'" />
                             </div>
                         </template>
                     </Column>
@@ -257,46 +293,63 @@ const getSeverity = (rate) => {
             <template #footer>
                 <div class="flex justify-end gap-3 pt-4 border-t border-slate-100">
                     <Button label="Annuler" text severity="secondary" @click="visible = false" class="!text-slate-500" />
-                    <Button :label="isEdit ? 'Mettre à jour' : 'Enregistrer'" icon="pi pi-check" @click="submitForm" :loading="form.processing" class="!bg-indigo-600 !border-none" />
+                    <Button :label="isEdit ? 'Mettre à jour' : 'Enregistrer'" icon="pi pi-check" @click="submitForm" :loading="form.processing" class="!bg-[#FF7A1A] !border-none" />
                 </div>
             </template>
         </Dialog>
 
-    </AdminLayout>
+    </component>
 </template>
 
 <style scoped>
 /* Style de la table moderne */
 .p-datatable-custom :deep(.p-datatable-thead > tr > th) {
-    background: #ffffff;
+    background: #fdfdfd;
     color: #64748b;
-    font-size: 11px;
-    font-weight: 700;
+    font-size: 10px;
+    font-weight: 900;
     text-transform: uppercase;
-    letter-spacing: 0.05em;
-    padding: 1.25rem 1rem;
-    border-bottom: 2px solid #f1f5f9;
+    letter-spacing: 0.1em;
+    padding: 1.5rem 1rem;
+    border-bottom: 2px solid #f8fafc;
 }
 
 .p-datatable-custom :deep(.p-datatable-tbody > tr) {
     background: #ffffff;
-    transition: background 0.2s;
+    transition: all 0.2s;
 }
 
 .p-datatable-custom :deep(.p-datatable-tbody > tr:hover) {
-    background: #f8fafc;
+    background: #fffaf5;
 }
 
 .p-datatable-custom :deep(.p-datatable-tbody > tr > td) {
-    padding: 1rem;
-    border-bottom: 1px solid #f1f5f9;
+    padding: 1.25rem 1rem;
+    border-bottom: 1px solid #f8fafc;
 }
 
-/* Style de la pagination */
+/* Pagination professionnelle */
 .p-datatable-custom :deep(.p-paginator) {
-    border: none;
-    padding: 1rem;
+    border-top: 2px solid #f8fafc;
+    padding: 1.5rem;
     background: #ffffff;
+}
+
+.p-datatable-custom :deep(.p-paginator .p-paginator-pages .p-paginator-page.p-highlight) {
+    background: #FF7A1A;
+    color: white;
+    border-radius: 12px;
+}
+
+/* Responsive Table Fixes */
+@media screen and (max-width: 960px) {
+    .p-datatable-custom :deep(.p-datatable-tbody > tr > td) {
+        text-align: left !important;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 1rem !important;
+    }
 }
 
 /* Style du Dialog */

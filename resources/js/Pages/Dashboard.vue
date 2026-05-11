@@ -16,8 +16,8 @@ const menuItems = [
         description: 'Gérer les effectifs',
         route: 'employees.index',
         icon: 'pi pi-users',
-        color: 'text-blue-600',
-        bgColor: 'bg-blue-50'
+        color: 'text-[#FF7A1A]',
+        bgColor: 'bg-orange-50'
     },
     {
         title: 'Affectations',
@@ -25,15 +25,15 @@ const menuItems = [
         route: 'assignments.index',
         icon: 'pi pi-sitemap',
         color: 'text-orange-600',
-        bgColor: 'bg-orange-50'
+        bgColor: 'bg-orange-100'
     },
     {
         title: 'Campagnes',
         description: 'Suivi des projets',
         route: 'campaigns.index',
         icon: 'pi pi-briefcase',
-        color: 'text-purple-600',
-        bgColor: 'bg-purple-50'
+        color: 'text-orange-700',
+        bgColor: 'bg-orange-200'
     }
 ];
 
@@ -95,7 +95,7 @@ onMounted(() => {
                 <Card>
                     <template #title>
                         <div class="flex items-center text-lg font-bold">
-                            <i class="pi pi-home mr-2 text-blue-500"></i>
+                            <i class="pi pi-home mr-2 text-[#FF7A1A]"></i>
                             Bienvenue sur Wip Lite
                         </div>
                     </template>

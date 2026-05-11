@@ -74,10 +74,10 @@ const formatDate = (dateString) => {
 // Fonction pour obtenir la couleur du badge de rôle
 const getRoleColor = (roleName) => {
     const roles = {
-        admin: "bg-rose-100 text-rose-700 border-rose-200",
-        cp: "bg-indigo-100 text-indigo-700 border-indigo-200",
-        sup: "bg-blue-100 text-blue-700 border-blue-200",
-        tc: "bg-emerald-100 text-emerald-700 border-emerald-200",
+        admin: "bg-orange-600 text-white border-orange-700",
+        cp: "bg-[#FF7A1A] text-white border-orange-700",
+        sup: "bg-orange-400 text-white border-orange-500",
+        tc: "bg-orange-200 text-orange-800 border-orange-300",
     };
     return (
         roles[roleName?.toLowerCase()] ||
@@ -113,7 +113,7 @@ const getRoleColor = (roleName) => {
                 </Link>
                 <Link
                     href="/admin/no_users"
-                    class="px-4 py-2 bg-indigo-600 text-white rounded-xl font-bold text-sm hover:bg-indigo-700 shadow-lg shadow-indigo-200 transition-all flex items-center gap-2"
+                    class="px-4 py-2 bg-[#FF7A1A] text-white rounded-xl font-bold text-sm hover:bg-[#e66a12] shadow-lg shadow-orange-200 transition-all flex items-center gap-2"
                 >
                     <i class="pi pi-user-plus"></i>
                     Créer un compte
@@ -159,7 +159,7 @@ const getRoleColor = (roleName) => {
                         >
                             <td class="px-6 py-4 flex items-center gap-3">
                                 <div
-                                    class="w-9 h-9 rounded-full bg-slate-100 flex items-center justify-center font-bold text-xs text-slate-600 border border-slate-200 group-hover:bg-indigo-50 group-hover:text-indigo-600 group-hover:border-indigo-100 transition-all"
+                                    class="w-9 h-9 rounded-full bg-slate-100 flex items-center justify-center font-bold text-xs text-slate-600 border border-slate-200 group-hover:bg-orange-50 group-hover:text-[#FF7A1A] group-hover:border-orange-100 transition-all"
                                 >
                                     {{
                                         user.email.substring(0, 2).toUpperCase()

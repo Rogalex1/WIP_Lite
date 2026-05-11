@@ -505,7 +505,7 @@ const weekDays = computed(() => {
         </Link>
     </div>
     
-    <div v-if="timesheet.status === 'brouillon'" class="flex space-x-4">
+    <div v-if="timesheet.status === 'brouillon' && hasPlanning" class="flex space-x-4">
         <button type="button"
                 @click="submit('draft')"
                 :disabled="form.processing"
@@ -539,6 +539,7 @@ const weekDays = computed(() => {
             Valider la feuille de temps
         </button>
     </div>
+    
 </div>
             </form>
         </div>

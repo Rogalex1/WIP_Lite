@@ -31,30 +31,37 @@ const isActive = (route) => {
 <template>
   <div class="min-h-screen bg-slate-50 flex font-sans antialiased">
     
-    <!-- Sidebar TC (Style Ambre/Chaleureux) -->
+    <!-- Sidebar TC (Style WIP Orange) -->
     <aside class="w-64 bg-white text-slate-600 flex-shrink-0 hidden md:flex flex-col border-r border-slate-200">
       <div class="h-16 flex items-center px-6 border-b border-slate-100">
-        <span class="text-slate-900 font-black tracking-tighter text-xl">MY<span class="text-amber-500">SPACE</span></span>
+        <span class="text-slate-900 font-black tracking-tighter text-xl">MY<span class="text-[#FF7A1A]">SPACE</span></span>
       </div>
       
       <nav class="flex-1 p-6 space-y-2">
         <Link href="/tc/dashboard" 
-              :class="[isActive('/tc/dashboard') ? 'bg-amber-50 text-amber-700' : 'hover:bg-slate-50 text-slate-500']"
+              :class="[isActive('/tc/dashboard') ? 'bg-orange-50 text-[#FF7A1A]' : 'hover:bg-slate-50 text-slate-500']"
               class="flex items-center p-3 rounded-xl transition-all font-bold group">
-          <i class="pi pi-home mr-3 text-lg" :class="isActive('/tc/dashboard') ? 'text-amber-500' : 'text-slate-400'"></i>
+          <i class="pi pi-home mr-3 text-lg" :class="isActive('/tc/dashboard') ? 'text-[#FF7A1A]' : 'text-slate-400'"></i>
           Mon Tableau de bord
         </Link>
 
         <Link
             :href="route('planning-assignments.index')"
-            :class="[isActive('planning-assignments.index') ? 'bg-amber-50 text-amber-700' : 'hover:bg-slate-50 text-slate-500']"
+            :class="[isActive('planning-assignments.index') ? 'bg-orange-50 text-[#FF7A1A]' : 'hover:bg-slate-50 text-slate-500']"
             class="flex items-center p-3 rounded-xl transition-all font-bold group">
  <i class="pi pi-table mr-3"></i>
            Mon plannig
         </Link>
 
+        <Link :href="route('reporting.index')"
+              :class="[isActive('reporting.index') ? 'bg-orange-50 text-[#FF7A1A]' : 'hover:bg-slate-50 text-slate-500']"
+              class="flex items-center p-3 rounded-xl transition-all font-bold group">
+          <i class="pi pi-chart-bar mr-3 text-lg"></i>
+          Mon Reporting
+        </Link>
+
         <Link href="/timesheets"
-              :class="[isActive('/timesheets') ? 'bg-amber-50 text-amber-700' : 'hover:bg-slate-50 text-slate-500']"
+              :class="[isActive('/timesheets') ? 'bg-orange-50 text-[#FF7A1A]' : 'hover:bg-slate-50 text-slate-500']"
               class="flex items-center p-3 rounded-xl transition-all font-bold group">
 <i class="pi pi-clock mr-3 text-lg"></i>
           Mes Timesheets
@@ -62,8 +69,8 @@ const isActive = (route) => {
       </nav>
 
       <div class="p-6">
-         <div class="bg-slate-900 rounded-2xl p-4 text-white shadow-lg">
-            <p class="text-[10px] uppercase font-black text-slate-500 mb-1">Campagne actuelle</p>
+         <div class="bg-[#FF7A1A] rounded-2xl p-4 text-white shadow-lg shadow-orange-900/20">
+            <p class="text-[10px] uppercase font-black text-orange-100 mb-1">Campagne actuelle</p>
             <p class="text-xs font-bold truncate">Service Client - Orange</p>
          </div>
       </div>
@@ -87,9 +94,9 @@ const isActive = (route) => {
           <div class="flex items-center gap-3">
              <div class="text-right hidden sm:block">
                 <p class="text-xs font-bold text-slate-800">{{ $page.props.auth.user?.email }}</p>
-                <p class="text-[10px] text-amber-600 font-medium">Téléconseiller</p>
+                <p class="text-[10px] text-[#FF7A1A] font-medium">Téléconseiller</p>
              </div>
-             <div class="w-10 h-10 rounded-full bg-amber-100 border-2 border-white shadow-sm flex items-center justify-center font-bold text-amber-700">
+             <div class="w-10 h-10 rounded-full bg-orange-100 border-2 border-white shadow-sm flex items-center justify-center font-bold text-[#FF7A1A]">
                 {{ $page.props.auth.user?.name?.charAt(0) || '?' }}
              </div>
           </div>

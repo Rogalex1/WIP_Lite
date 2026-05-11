@@ -23,6 +23,9 @@ defineProps({
       <Link :href="route('campaigns.index')" class="px-6 py-3 bg-[#FF7A1A] text-white rounded-xl font-black text-[10px] uppercase tracking-widest shadow-lg shadow-orange-100 hover:bg-slate-900 transition-all">
         Ma Campagne
       </Link>
+      <Link :href="route('reporting.index')" class="px-6 py-3 bg-slate-800 text-white rounded-xl font-black text-[10px] uppercase tracking-widest shadow-lg hover:bg-slate-900 transition-all">
+        Reporting Équipe
+      </Link>
     </div>
 
     <!-- Stats SUP -->

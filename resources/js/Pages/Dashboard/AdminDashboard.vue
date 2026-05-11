@@ -42,7 +42,7 @@ const getActionLabel = (type) => {
             <div class="flex gap-3">
                 <Link
                     :href="route('notifications.index')"
-                    class="px-4 py-2 bg-blue-600 text-white rounded-xl font-bold text-sm hover:bg-blue-700 transition-all shadow-sm flex items-center gap-2"
+                    class="px-4 py-2 bg-[#FF7A1A] text-white rounded-xl font-bold text-sm hover:bg-[#e66a12] transition-all shadow-sm flex items-center gap-2"
                 >
                     <i class="pi pi-bell text-sm"></i>
                     Notifications
@@ -58,6 +58,13 @@ const getActionLabel = (type) => {
                 >
                     <i class="pi pi-plus text-[10px]"></i>
                     Nouvelle Campagne
+                </Link>
+                <Link
+                    :href="route('reporting.index')"
+                    class="px-4 py-2 bg-slate-800 text-white rounded-xl font-black text-sm hover:bg-slate-900 transition-all uppercase tracking-widest flex items-center gap-2"
+                >
+                    <i class="pi pi-chart-bar text-sm"></i>
+                    Reporting
                 </Link>
             </div>
         </div>

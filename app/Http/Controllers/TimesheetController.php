@@ -334,11 +334,8 @@ private function processTimesheetEntry($employee, $week, $entries, $action, $use
             }
         } elseif ($role === 'sup') {
             // SUP peut voir ses TC
-            $canAccess = Assignment::where('manager_id', $user->employee->id)
-                ->where('employee_id', $employee->id)
-                ->where('status', 'actif')
-                ->exists();
-                
+           $employee->load('position');
+            $canAccess = $employee->position && $employee->position->code === 'TC';
             if (!$canAccess) {
                 abort(403, 'Accès non autorisé.');
             }

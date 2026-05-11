@@ -7,29 +7,54 @@ use Illuminate\Http\Request;
 use Inertia\Inertia;
 use App\Notifications\NewReportNotification;
 use Illuminate\Support\Facades\Auth;
-use App\Models\Campaign; // 
-
+use App\Models\Campaign;
+use App\Models\User;
+use App\Models\Employee;
+use App\Models\Assignment;
 
 class ReportingController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
-public function index()
+    public function index()
     {
         $user = Auth::user();
-        $query = Reporting::with(['user', 'campaign']);
+        $query = Reporting::with(['user.employee', 'campaign']);
+        $roleName = $user->role->name;
 
-        // Filtrage selon le rôle
-        if ($user->role === 'tc') {
+        // Filtrage hiérarchique selon le rôle
+        if ($roleName === 'tc') {
+            // Un TC ne voit que ses propres rapports
             $query->where('user_id', $user->id);
+        } elseif ($roleName === 'sup') {
+            // Un SUP voit ses rapports et ceux des agents qu'il supervise
+            $employeeId = $user->employee->id ?? null;
+            if ($employeeId) {
+                $agentUserIds = Assignment::where('manager_id', $employeeId)
+                    ->with('employee.user')
+                    ->get()
+                    ->pluck('employee.user_id')
+                    ->filter()
+                    ->push($user->id)
+                    ->unique();
+                $query->whereIn('user_id', $agentUserIds);
+            } else {
+                $query->where('user_id', $user->id);
+            }
+        } elseif ($roleName === 'cp') {
+            // Un CP voit tout ce qui concerne ses superviseurs et leurs agents
+            // Pour simplifier ici, on peut aussi dire qu'il voit tout s'il n'y a pas de lien CP->SUP strict dans Assignment
+            // Mais si on suit la logique hiérarchique : CP voit tout ce que ses SUP voient.
+            // Si on n'a pas de lien direct CP->SUP dans les assignments, on laisse l'Admin voir tout et le CP voir tout aussi pour l'instant
+            // ou on peut filtrer par campagne s'il est affecté à des campagnes.
         }
+        // Admin voit tout par défaut
 
-return Inertia::render('Reports/Index', [
-        'reports' => $query->latest('report_date')->get(),
-        // On filtre sur le statut 'active' défini dans ta migration
-        'campaigns' => Campaign::where('status', 'active')->get(['id', 'name']), 
-    ]);
+        return Inertia::render('Reports/Index', [
+            'reports' => $query->latest('report_date')->get(),
+            'campaigns' => Campaign::where('status', 'active')->get(['id', 'name']),
+        ]);
     }
 
     public function store(Request $request)
