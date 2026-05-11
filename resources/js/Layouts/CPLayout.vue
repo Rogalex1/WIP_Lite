@@ -65,7 +65,7 @@ const isRouteActive = (name) => route().current(name);
         <!-- LOGO -->
         <div class="h-16 flex items-center px-6 border-b border-slate-800">
             <span class="text-white font-black text-xl italic">
-                CP<span class="text-orange-500">PANEL</span>
+                CP<span class="text-[#FF7A1A]">PANEL</span>
             </span>
         </div>
 
@@ -79,30 +79,30 @@ const isRouteActive = (name) => route().current(name);
             <!-- Dashboard CP -->
             <Link
                 :href="route('cp.dashboard')"
-                :class="[isRouteActive('cp.dashboard') ? 'bg-slate-800 text-white' : 'hover:bg-slate-800']"
+                :class="[isRouteActive('cp.dashboard') ? 'bg-[#FF7A1A] text-white shadow-lg shadow-orange-900/20' : 'hover:bg-slate-800']"
                 class="flex items-center p-3 rounded-xl transition group"
             >
-                <i class="pi pi-home mr-3 text-orange-400 group-hover:text-white"></i>
+                <i class="pi pi-home mr-3 text-[#FF7A1A] group-hover:text-white"></i>
                 Dashboard
             </Link>
 
             <!-- Campagnes -->
             <Link
                 :href="route('campaigns.index')"
-                :class="[isRouteActive('campaigns.index') ? 'bg-slate-800 text-white' : 'hover:bg-slate-800']"
+                :class="[isRouteActive('campaigns.index') ? 'bg-[#FF7A1A] text-white shadow-lg shadow-orange-900/20' : 'hover:bg-slate-800']"
                 class="flex items-center p-3 rounded-xl transition group"
             >
-                <i class="pi pi-flag mr-3 text-orange-400 group-hover:text-white"></i>
+                <i class="pi pi-flag mr-3 text-[#FF7A1A] group-hover:text-white"></i>
                 Campagnes
             </Link>
 
             <!-- Mes Équipes (Assignations) -->
             <Link
                 :href="route('assignments.index')"
-                :class="[isRouteActive('assignments.index') ? 'bg-slate-800 text-white' : 'hover:bg-slate-800']"
+                :class="[isRouteActive('assignments.index') ? 'bg-[#FF7A1A] text-white shadow-lg shadow-orange-900/20' : 'hover:bg-slate-800']"
                 class="flex items-center p-3 rounded-xl transition group"
             >
-                <i class="pi pi-users mr-3 text-orange-400 group-hover:text-white"></i>
+                <i class="pi pi-users mr-3 text-[#FF7A1A] group-hover:text-white"></i>
                 Mes Équipes
             </Link>
 
@@ -115,40 +115,50 @@ const isRouteActive = (name) => route().current(name);
             <!-- Validations -->
             <Link
                 :href="route('cp.planning-validation')"
-                :class="[isRouteActive('cp.planning-validation') ? 'bg-slate-800 text-white' : 'hover:bg-slate-800']"
+                :class="[isRouteActive('cp.planning-validation') ? 'bg-[#FF7A1A] text-white shadow-lg shadow-orange-900/20' : 'hover:bg-slate-800']"
                 class="flex items-center p-3 rounded-xl transition group"
             >
-                <i class="pi pi-check-square mr-3 text-orange-400 group-hover:text-white"></i>
+                <i class="pi pi-check-square mr-3 text-[#FF7A1A] group-hover:text-white"></i>
                 Validations
             </Link>
 
             <!-- Modèles Planning -->
             <Link
                 :href="route('planning-models.index')"
-                :class="[isRouteActive('planning-models.index') ? 'bg-slate-800 text-white' : 'hover:bg-slate-800']"
+                :class="[isRouteActive('planning-models.index') ? 'bg-[#FF7A1A] text-white shadow-lg shadow-orange-900/20' : 'hover:bg-slate-800']"
                 class="flex items-center p-3 rounded-xl transition group"
             >
-                <i class="pi pi-table mr-3 text-orange-400 group-hover:text-white"></i>
+                <i class="pi pi-table mr-3 text-[#FF7A1A] group-hover:text-white"></i>
                 Modèles Planning
             </Link>
 
             <!-- Affectations Plannings -->
             <Link
                 :href="route('planning-assignments.index')"
-                :class="[isRouteActive('planning-assignments.index') ? 'bg-slate-800 text-white' : 'hover:bg-slate-800']"
+                :class="[isRouteActive('planning-assignments.index') ? 'bg-[#FF7A1A] text-white shadow-lg shadow-orange-900/20' : 'hover:bg-slate-800']"
                 class="flex items-center p-3 rounded-xl transition group"
             >
-                <i class="pi pi-calendar mr-3 text-orange-400 group-hover:text-white"></i>
+                <i class="pi pi-calendar mr-3 text-[#FF7A1A] group-hover:text-white"></i>
                 Affectations
+            </Link>
+
+            <!-- Reporting -->
+            <Link
+                :href="route('reporting.index')"
+                :class="[isRouteActive('reporting.index') ? 'bg-[#FF7A1A] text-white shadow-lg shadow-orange-900/20' : 'hover:bg-slate-800']"
+                class="flex items-center p-3 rounded-xl transition group"
+            >
+                <i class="pi pi-chart-bar mr-3 text-[#FF7A1A] group-hover:text-white"></i>
+                Reporting
             </Link>
 
             <!-- Timesheets -->
             <Link
                 :href="route('timesheets.index')"
-                :class="[isRouteActive('timesheets.index') ? 'bg-slate-800 text-white' : 'hover:bg-slate-800']"
+                :class="[isRouteActive('timesheets.index') ? 'bg-[#FF7A1A] text-white shadow-lg shadow-orange-900/20' : 'hover:bg-slate-800']"
                 class="flex items-center p-3 rounded-xl transition group"
             >
-                <i class="pi pi-clock mr-3 text-orange-400 group-hover:text-white"></i>
+                <i class="pi pi-clock mr-3 text-[#FF7A1A] group-hover:text-white"></i>
                 Timesheets
             </Link>
 

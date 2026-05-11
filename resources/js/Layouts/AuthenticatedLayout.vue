@@ -148,7 +148,7 @@ watch(
                             <div class="flex shrink-0 items-center">
                                 <!-- Changement : route(dashboardRoute) -->
                                 <Link :href="route(dashboardRoute)">
-                                    <ApplicationLogo class="block h-9 w-auto fill-current text-gray-800" />
+                                    <ApplicationLogo class="block h-9 w-auto fill-current text-[#FF7A1A]" />
                                 </Link>
                             </div>
  

@@ -18,7 +18,7 @@ defineProps({
 
         <div v-if="allNotifications.length > 0" class="space-y-4">
             <Card v-for="notif in allNotifications" :key="notif.id" 
-                  :class="{'bg-white': notif.read_at, 'bg-blue-50 border-l-4 border-blue-500': !notif.read_at}">
+                  :class="{'bg-white': notif.read_at, 'bg-orange-50 border-l-4 border-[#FF7A1A]': !notif.read_at}">
                 <template #content>
                     <div class="flex justify-between items-center">
                         <div>
@@ -30,7 +30,7 @@ defineProps({
                             </span>
                         </div>
                         <div v-if="!notif.read_at">
-                            <span class="px-2 py-1 bg-blue-600 text-white text-xs rounded-full">Nouveau</span>
+                            <span class="px-2 py-1 bg-[#FF7A1A] text-white text-xs rounded-full">Nouveau</span>
                         </div>
                     </div>
                 </template>
