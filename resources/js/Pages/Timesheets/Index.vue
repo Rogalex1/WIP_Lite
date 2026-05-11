@@ -281,9 +281,7 @@ const canBulkSubmit = computed(() => {
 
 // Actions en masse
 const bulkValidate = () => {
-    if (!confirm(`Voulez-vous vraiment valider les timesheets de ${selectedEmployees.value.length} employé(s) ?`)) {
-        return;
-    }
+   
     
     router.post('/timesheets/bulk-validate', {
         employee_ids: selectedEmployees.value,
@@ -297,9 +295,7 @@ const bulkValidate = () => {
 };
 
 const bulkSubmit = () => {
-    if (!confirm(`Voulez-vous vraiment soumettre les timesheets de ${selectedEmployees.value.length} employé(s) ?`)) {
-        return;
-    }
+    
     
     router.post('/timesheets/bulk-submit', {
         employee_ids: selectedEmployees.value,
@@ -413,8 +409,8 @@ const getHeaderText = () => {
 
             <!-- Tableau principal -->
             <div class="bg-white rounded-lg shadow-sm border overflow-hidden">
-                <div class="overflow-x-auto">
-                    <table class="w-full">
+                <div class="max-w-[1500px] overflow-x-auto"> 
+                    <table class="min-w-[1400px] w-full">
                         <thead class="bg-gray-50 border-b">
                             <tr>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
