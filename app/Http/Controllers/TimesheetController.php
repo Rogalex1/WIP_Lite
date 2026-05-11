@@ -343,12 +343,10 @@ private function processTimesheetEntry($employee, $week, $entries, $action, $use
                 abort(403, 'Accès non autorisé.');
             }
         } elseif ($role === 'cp') {
-            // CP peut voir ses superviseurs
-            $canAccess = Assignment::where('manager_id', $user->employee->id)
-                ->where('employee_id', $employee->id)
-                ->where('status', 'actif')
-                ->exists();
-                
+            // CP peut accéder aux SUPs
+            $employee->load('position');
+            $canAccess = $employee->position && $employee->position->code === 'SUP';
+            
             if (!$canAccess) {
                 abort(403, 'Accès non autorisé.');
             }
