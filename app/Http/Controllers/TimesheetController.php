@@ -336,17 +336,13 @@ private function processTimesheetEntry($employee, $week, $entries, $action, $use
             // SUP peut voir ses TC
            $employee->load('position');
             $canAccess = $employee->position && $employee->position->code === 'TC';
-            if (!$canAccess) {
-                abort(403, 'Accès non autorisé.');
-            }
+            
         } elseif ($role === 'cp') {
             // CP peut accéder aux SUPs
             $employee->load('position');
             $canAccess = $employee->position && $employee->position->code === 'SUP';
             
-            if (!$canAccess) {
-                abort(403, 'Accès non autorisé.');
-            }
+           
         }
     }
     

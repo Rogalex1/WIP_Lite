@@ -1,9 +1,3 @@
-<template>
-  <div>
-    <p>Page Employés - À compléter</p>
-  </div>
-</template>
-
 <script setup>
 import { ref, watch } from "vue";
 import { Link, router, Head } from "@inertiajs/vue3";

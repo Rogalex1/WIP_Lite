@@ -30,6 +30,8 @@ class Employee extends Model
         'deleted_at' => 'datetime',
     ];
 
+    protected $appends = ['full_name'];
+
     /**
      * Accessor : Nom complet
      */

@@ -205,13 +205,15 @@ const getSeverity = (rate) => {
                         </template>
                     </Column>
                     
-                    <Column field="user.name" header="Agent" v-if="$page.props.auth.user.role.name !== 'tc'">
+                    <Column field="user.employee.full_name" header="Agent" v-if="$page.props.auth.user.role.name !== 'tc'">
                         <template #body="{ data }">
                             <div class="flex items-center gap-2">
                                 <div class="w-7 h-7 rounded-full bg-orange-50 flex items-center justify-center text-[#FF7A1A] text-xs font-bold">
-                                    {{ data.user?.name?.charAt(0) || 'A' }}
+                                    {{ data.user?.employee?.first_name?.charAt(0) || 'A' }}
                                 </div>
-                                <span class="text-slate-600 font-medium">{{ data.user?.name }}</span>
+                                <span class="text-slate-600 font-medium">
+                                    {{ data.user?.employee?.full_name || 'Agent Inconnu' }}
+                                </span>
                             </div>
                         </template>
                     </Column>
