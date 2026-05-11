@@ -81,7 +81,6 @@ class EmployeeSeeder extends Seeder
         $this->createHighSalaryEmployees();
         $this->createRecentlyHiredEmployees();
         $this->createSeniorEmployees();
-        $this->createTestEmployees();
     }
 
     private function createActiveEmployees(): void
