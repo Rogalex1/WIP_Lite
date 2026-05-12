@@ -545,18 +545,7 @@ const getHeaderText = () => {
                             class="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors text-sm font-medium">
                             Saisie groupée
                         </button>
-                        <button 
-                            v-if="canBulkSubmit"
-                            @click="bulkSubmit"
-                            class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium">
-                            Soumettre les timesheets
-                        </button>
-                        <button 
-                            v-if="canBulkValidate"
-                            @click="bulkValidate"
-                            class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm font-medium">
-                            Valider les timesheets
-                        </button>
+
                     </div>
                 </div>
             </div>

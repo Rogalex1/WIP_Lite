@@ -69,8 +69,8 @@ if ($role !== 'admin') {
         $employee->timesheet_for_period = $timesheet;
         
         $planningAssignment = PlanningAssignment::where('employee_id', $employee->id)
-            ->where('start_date', '<=', $startDate)
-            ->where('end_date', '>=', $endDate)
+            ->whereDate('start_date', '<=', $startDate)
+            ->whereDate('end_date', '>=', $endDate)
             ->where('status', 'validé')
             ->with('planningModel')
             ->first();
@@ -128,8 +128,8 @@ if ($role !== 'admin') {
         
         // Récupérer le planning de référence
         $planningAssignment = PlanningAssignment::where('employee_id', $employee->id)
-            ->where('start_date', '<=', $startDate)
-            ->where('end_date', '>=', $endDate)
+            ->whereDate('start_date', '<=', $startDate)
+            ->whereDate('end_date', '>=', $endDate)
             ->where('status', 'validé')
             ->with('planningModel')
             ->first();
@@ -294,15 +294,7 @@ private function processTimesheetEntry($employee, $week, $entries, $action, $use
             abort(403, 'Action non autorisée.');
         }
         
-        // Vérifier que le CP a le droit de valider cette timesheet
-        $canValidate = Assignment::where('manager_id', $user->employee->id)
-            ->where('employee_id', $timesheet->employee_id)
-            ->where('status', 'actif')
-            ->exists();
-            
-        if (!$canValidate) {
-            abort(403, 'Vous n\'êtes pas autorisé à valider cette feuille de temps.');
-        }
+        
         
         $timesheet->status = 'validé';
         $timesheet->validated_by = $user->employee->id;
@@ -444,16 +436,16 @@ public function bulkSubmit(Request $request)
                     continue;
                 }
                 
-                // Vérifier que le CP a le droit de valider cette timesheet
-                $canValidate = Assignment::where('manager_id', $user->employee->id)
-                    ->where('employee_id', $employeeId)
-                    ->where('status', 'actif')
-                    ->exists();
+                // // Vérifier que le CP a le droit de valider cette timesheet
+                // $canValidate = Assignment::where('manager_id', $user->employee->id)
+                //     ->where('employee_id', $employeeId)
+                //     ->where('status', 'actif')
+                //     ->exists();
                     
-                if (!$canValidate) {
-                    $errors[] = "Vous n'êtes pas autorisé à valider la timesheet de l'employé ID $employeeId";
-                    continue;
-                }
+                // if (!$canValidate) {
+                //     $errors[] = "Vous n'êtes pas autorisé à valider la timesheet de l'employé ID $employeeId";
+                //     continue;
+                // }
                 
                 $timesheet->status = 'validé';
                 $timesheet->validated_by = $user->employee->id;

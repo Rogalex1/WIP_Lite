@@ -10,6 +10,7 @@ use App\Http\Requests\StorePlanningAssignmentRequest;
 use App\Http\Requests\UpdatePlanningAssignmentRequest;
 use App\Http\Resources\PlanningAssignmentResource;
 use App\Http\Resources\PlanningHistoryResource;
+use App\Models\Assignment;
 use Inertia\Inertia;
 
 class PlanningAssignmentController extends Controller
@@ -131,7 +132,86 @@ class PlanningAssignmentController extends Controller
         $data['validated_by'] = auth()->user()->employee->id;
         $data['validated_at'] = now();
 
-        PlanningAssignment::create($data);
+        $planningAssignment = PlanningAssignment::create($data);
+        /*
+|--------------------------------------------------------------------------
+| Propagation automatique du planning aux TC du SUP
+|--------------------------------------------------------------------------
+*/
+
+// Charger employé + position
+$planningAssignment->load('employee.position');
+
+$assignedEmployee = $planningAssignment->employee;
+
+// Vérifier si l'employé est un SUP
+$isSup =
+    strtolower($assignedEmployee->position->code ?? '') === 'sup' ||
+    strtolower($assignedEmployee->position->name ?? '') === 'superviseur';
+
+if ($isSup) {
+
+    // Récupérer les TC sous ce SUP
+    $tcIds = Assignment::where('manager_id', $assignedEmployee->id)
+        ->pluck('employee_id');
+
+    $tcs = Employee::with('position')
+        ->whereIn('id', $tcIds)
+        ->get();
+
+    foreach ($tcs as $tc) {
+
+        // Vérifier que c'est bien un TC
+        $isTc =
+            strtolower($tc->position->code ?? '') === 'tc' ||
+            strtolower($tc->position->name ?? '') === 'teleconseiller';
+
+        if (!$isTc) {
+            continue;
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | Vérifier conflit
+        |--------------------------------------------------------------------------
+        */
+        $conflict = PlanningAssignment::where('employee_id', $tc->id)
+            ->whereIn('status', ['en attente', 'validé'])
+            ->where(function ($query) use ($planningAssignment) {
+
+                $query->whereBetween('start_date', [
+                    $planningAssignment->start_date,
+                    $planningAssignment->end_date ?? '9999-12-31'
+                ])
+                ->orWhereBetween('end_date', [
+                    $planningAssignment->start_date,
+                    $planningAssignment->end_date ?? '9999-12-31'
+                ])
+                ->orWhereNull('end_date');
+            })
+            ->exists();
+
+        // Si conflit → on ignore
+        if ($conflict) {
+            continue;
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | Création du planning TC
+        |--------------------------------------------------------------------------
+        */
+        PlanningAssignment::create([
+            'employee_id'       => $tc->id,
+            'planning_model_id' => $planningAssignment->planning_model_id,
+            'start_date'        => $planningAssignment->start_date,
+            'end_date'          => $planningAssignment->end_date,
+            'status'            => 'validé',
+            'validated_by'      => auth()->user()->employee->id,
+            'validated_at'      => now(),
+        ]);
+    }
+}
 
         return redirect()
             ->route('planning-assignments.index')
@@ -258,24 +338,113 @@ class PlanningAssignmentController extends Controller
             ->with('success', 'Affectation supprimée avec succès.');
     }
 
-    public function validateAssignment(PlanningAssignment $planningAssignment)
-    {
-        // Vérifier si l'utilisateur est bien le CP responsable ou un Admin
-        $user = auth()->user();
+public function validateAssignment(PlanningAssignment $planningAssignment)
+{
+    $user = auth()->user();
 
-        if ($user->role->name !== 'admin' && $user->role->name !== 'cp') {
-            return back()->with('error', 'Vous n\'avez pas les droits pour valider ce planning.');
-        }
-
-        // Logic de validation...
-        $planningAssignment->update([
-            'status' => 'validé',
-            'validated_by' => $user->employee->id,
-            'validated_at' => now(),
-        ]);
-
-        return back()->with('success', 'Planning rendu effectif.');
+    // Vérification des droits
+    if ($user->role->name !== 'admin' && $user->role->name !== 'cp') {
+        return back()->with('error', 'Vous n\'avez pas les droits pour valider ce planning.');
     }
+
+    // Validation du planning principal
+    $planningAssignment->update([
+        'status' => 'validé',
+        'validated_by' => $user->employee->id,
+        'validated_at' => now(),
+    ]);
+
+    // Charger l'employé + position
+    $planningAssignment->load('employee.position');
+
+    $employee = $planningAssignment->employee;
+
+    /*
+    |--------------------------------------------------------------------------
+    | Vérifier si l'employé est un SUP
+    |--------------------------------------------------------------------------
+    */
+    if (
+        $employee &&
+        $employee->position &&
+        (
+            strtolower($employee->position->code ?? '') === 'sup' ||
+            strtolower($employee->position->name ?? '') === 'superviseur'
+        )
+    ) {
+
+        /*
+        |--------------------------------------------------------------------------
+        | Récupérer tous les TC sous ce SUP
+        |--------------------------------------------------------------------------
+        */
+        $tcIds = Assignment::where('manager_id', $employee->id)
+            ->pluck('employee_id');
+
+        $tcs = Employee::with('position')
+            ->whereIn('id', $tcIds)
+            ->get();
+
+        /*
+        |--------------------------------------------------------------------------
+        | Créer le planning pour chaque TC
+        |--------------------------------------------------------------------------
+        */
+        foreach ($tcs as $tc) {
+
+            // Vérifier que c'est bien un TC
+            $isTc =
+                strtolower($tc->position->code ?? '') === 'tc' ||
+                strtolower($tc->position->name ?? '') === 'teleconseiller';
+
+            if (!$isTc) {
+                continue;
+            }
+
+            /*
+            |--------------------------------------------------------------------------
+            | Vérifier qu'il n'a pas déjà un planning actif
+            |--------------------------------------------------------------------------
+            */
+            $conflict = PlanningAssignment::where('employee_id', $tc->id)
+                ->whereIn('status', ['en attente', 'validé'])
+                ->where(function ($query) use ($planningAssignment) {
+                    $query->whereBetween('start_date', [
+                        $planningAssignment->start_date,
+                        $planningAssignment->end_date ?? '9999-12-31'
+                    ])
+                    ->orWhereBetween('end_date', [
+                        $planningAssignment->start_date,
+                        $planningAssignment->end_date ?? '9999-12-31'
+                    ])
+                    ->orWhereNull('end_date');
+                })
+                ->exists();
+
+            // Si conflit → on saute ce TC
+            if ($conflict) {
+                continue;
+            }
+
+            /*
+            |--------------------------------------------------------------------------
+            | Création automatique du planning du TC
+            |--------------------------------------------------------------------------
+            */
+            PlanningAssignment::create([
+                'employee_id'       => $tc->id,
+                'planning_model_id' => $planningAssignment->planning_model_id,
+                'start_date'        => $planningAssignment->start_date,
+                'end_date'          => $planningAssignment->end_date,
+                'status'            => 'validé',
+                'validated_by'      => $user->employee->id,
+                'validated_at'      => now(),
+            ]);
+        }
+    }
+
+    return back()->with('success', 'Planning validé avec succès.');
+}
 
     public function suspend(PlanningAssignment $planningAssignment)
     {
