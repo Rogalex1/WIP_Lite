@@ -1,5 +1,5 @@
 <template>
-  <AppLayout title="Historique Planning">
+ 
     <div class="p-6 max-w-4xl mx-auto">
 
       <div class="flex justify-between items-center mb-6">
@@ -43,7 +43,7 @@
       </Card>
 
     </div>
-  </AppLayout>
+
 </template>
 
 <script setup>
@@ -63,5 +63,30 @@ function statusSeverity(status) {
     'terminé':    'secondary',
   }
   return map[status] ?? 'info'
+}
+</script>
+
+<script>
+import CPLayout from '@/Layouts/CPLayout.vue';
+import AdminLayout from '@/Layouts/AdminLayout.vue';
+import SUPLayout from '@/Layouts/SUPLayout.vue';
+import TClayout from '@/Layouts/TCLayout.vue';
+
+export default {
+    layout: (h, page) => {
+        const layouts = {
+            cp: CPLayout,
+            sup: SUPLayout,
+            tc: TClayout,
+            admin: AdminLayout
+        };
+
+        // ✅ FIX ICI
+        const role = page.props.auth?.user?.role?.name;
+
+        const selectedLayout = layouts[role] || TClayout;
+
+        return h(selectedLayout, [page]);
+    }
 }
 </script>

@@ -1,3 +1,27 @@
+<script>
+import CPLayout from '@/Layouts/CPLayout.vue';
+import AdminLayout from '@/Layouts/AdminLayout.vue';
+import SUPLayout from '@/Layouts/SUPLayout.vue';
+import TClayout from '@/Layouts/TCLayout.vue';
+
+export default {
+    layout: (h, page) => {
+        const layouts = {
+            cp: CPLayout,
+            sup: SUPLayout,
+            tc: TClayout,
+            admin: AdminLayout
+        };
+
+        // ✅ FIX ICI
+        const role = page.props.auth?.user?.role?.name;
+
+        const selectedLayout = layouts[role] || TClayout;
+
+        return h(selectedLayout, [page]);
+    }
+}
+</script>
 <script setup>
 import { computed } from 'vue'
 import { useForm } from '@inertiajs/vue3'
@@ -45,7 +69,7 @@ function submit() {
 </script>
 
 <template>
-  <AppLayout title="Modifier affectation">
+
     <div class="p-6 max-w-3xl mx-auto">
 
       <h1 class="text-2xl font-bold mb-6">Modifier affectation</h1>
@@ -128,5 +152,5 @@ function submit() {
       </Card>
 
     </div>
-  </AppLayout>
+
 </template>

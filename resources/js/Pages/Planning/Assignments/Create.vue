@@ -1,5 +1,5 @@
 <template>
-  <AppLayout title="Nouvelle affectation">
+
     <div class="p-6 max-w-3xl mx-auto">
 
       <h1 class="text-2xl font-bold mb-6">Nouvelle affectation</h1>
@@ -72,7 +72,7 @@
       </Card>
 
     </div>
-  </AppLayout>
+
 </template>
 
 <script setup>
@@ -115,5 +115,30 @@ function submit() {
     end_date:   form.end_date   ? new Date(form.end_date).toISOString().split('T')[0]   : null,
   }
   form.transform(() => data).post(route('planning-assignments.store'))
+}
+</script>
+
+<script>
+import CPLayout from '@/Layouts/CPLayout.vue';
+import AdminLayout from '@/Layouts/AdminLayout.vue';
+import SUPLayout from '@/Layouts/SUPLayout.vue';
+import TClayout from '@/Layouts/TCLayout.vue';
+
+export default {
+    layout: (h, page) => {
+        const layouts = {
+            cp: CPLayout,
+            sup: SUPLayout,
+            tc: TClayout,
+            admin: AdminLayout
+        };
+
+        // ✅ FIX ICI
+        const role = page.props.auth?.user?.role?.name;
+
+        const selectedLayout = layouts[role] || TClayout;
+
+        return h(selectedLayout, [page]);
+    }
 }
 </script>

@@ -1,5 +1,5 @@
 <template>
-  <AppLayout title="Détail modèle de planning">
+
     <div class="p-6 max-w-4xl mx-auto">
 
       <!-- Header -->
@@ -70,7 +70,7 @@
       </Card>
 
     </div>
-  </AppLayout>
+
 </template>
 
 <script setup>
@@ -90,4 +90,29 @@ const days = [
   { label: 'Samedi',   field: 'saturday_hours' },
   { label: 'Dimanche', field: 'sunday_hours' },
 ]
+</script>
+
+<script>
+import CPLayout from '@/Layouts/CPLayout.vue';
+import AdminLayout from '@/Layouts/AdminLayout.vue';
+import SUPLayout from '@/Layouts/SUPLayout.vue';
+import TClayout from '@/Layouts/TCLayout.vue';
+
+export default {
+    layout: (h, page) => {
+        const layouts = {
+            cp: CPLayout,
+            sup: SUPLayout,
+            tc: TClayout,
+            admin: AdminLayout
+        };
+
+        // ✅ FIX ICI
+        const role = page.props.auth?.user?.role?.name;
+
+        const selectedLayout = layouts[role] || TClayout;
+
+        return h(selectedLayout, [page]);
+    }
+}
 </script>

@@ -104,7 +104,7 @@ if ($role !== 'admin') {
         
         $week = $request->get('week', now()->format('Y-\WW'));
         $year = (int)substr($week, 0, 4);
-        $weekNumber = (int)substr($week, 6); // Corrigé: commencer à l'index 6 pour sauter "Y-W"
+        $weekNumber = (int)substr($week, 6); 
         
         $startDate = Carbon::now()->setISODate($year, $weekNumber)->startOfWeek();
         $endDate = $startDate->copy()->endOfWeek();
