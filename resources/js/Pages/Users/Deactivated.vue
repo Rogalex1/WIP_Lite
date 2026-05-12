@@ -147,7 +147,7 @@ const activateUser = (user) => {
                         <Link 
                             v-else 
                             :href="link.url" 
-                            class="px-3 py-1.5 text-xs font-bold rounded-lg transition-all"
+                            class="px-3 py-1.5 text-xs font-bold rounded-lg transition-all duration-200"
                             :class="link.active ? 'bg-indigo-600 text-white shadow-md shadow-indigo-100' : 'text-slate-500 hover:bg-white border border-transparent hover:border-slate-200'"
                             v-html="link.label" 
                         />

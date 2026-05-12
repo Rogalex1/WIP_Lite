@@ -1,15 +1,37 @@
 <script setup>
-import { useForm, Head } from "@inertiajs/vue3";
-import { ref } from "vue";
+import { useForm, Head, Link, router } from "@inertiajs/vue3";
+import { ref, watch } from "vue";
 import AdminLayout from "@/Layouts/AdminLayout.vue";
 import Dialog from "primevue/dialog";
+import InputText from "primevue/inputtext";
+import Dropdown from "primevue/dropdown";
 
 defineOptions({ layout: AdminLayout });
 
 const props = defineProps({
-    employesSansCompte: Array,
+    employesSansCompte: Object,
     employe: Object, // L'employé sélectionné pour le pré-remplissage
     roles: Array,
+    positions: Array,
+    filters: Object,
+});
+
+// Filtres
+const search = ref(props.filters?.search || "");
+const position_id = ref(props.filters?.position_id || "");
+
+const applyFilters = () => {
+    router.get(route('admin.no_users'), {
+        search: search.value,
+        position_id: position_id.value,
+    }, {
+        preserveState: true,
+        replace: true,
+    });
+};
+
+watch([search, position_id], () => {
+    applyFilters();
 });
 
 // Initialisation du formulaire
@@ -58,21 +80,55 @@ const getRoleBadgeClass = (roleName) => {
 
     <div class="space-y-8">
         <!-- Header de la page -->
-        <div class="flex flex-col md:items-start gap-1">
-            <h1 class="text-3xl font-black text-slate-800 tracking-tight">Activation des comptes</h1>
-            <p class="text-slate-500">Sélectionnez un employé pour lui créer un accès à la plateforme.</p>
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div class="flex items-center gap-4">
+                <Link 
+                    :href="route('users.index')"
+                    class="w-10 h-10 rounded-xl bg-white border border-slate-200 flex items-center justify-center text-slate-400 hover:text-indigo-600 hover:border-indigo-100 hover:bg-indigo-50 transition-all shadow-sm"
+                    title="Retour à la liste"
+                >
+                    <i class="pi pi-arrow-left text-sm"></i>
+                </Link>
+                <div>
+                    <h1 class="text-3xl font-black text-slate-800 tracking-tight">Activation des comptes</h1>
+                    <p class="text-slate-500 mt-1">Sélectionnez un employé pour lui créer un accès à la plateforme.</p>
+                </div>
+            </div>
         </div>
 
         <!-- Table des employés sans compte -->
         <div class="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
-            <div class="p-6 border-b border-slate-50 flex justify-between items-center bg-slate-50/30">
-                <h3 class="font-bold text-slate-800 text-lg flex items-center gap-2">
-                    <i class="pi pi-users text-indigo-500"></i>
-                    Employés en attente d'accès
-                </h3>
-                <span class="px-3 py-1 bg-amber-100 text-amber-700 rounded-full text-xs font-bold border border-amber-200">
-                    {{ employesSansCompte.length }} en attente
-                </span>
+            <div class="p-6 border-b border-slate-50 flex flex-col md:flex-row md:items-center justify-between gap-4 bg-slate-50/30">
+                <div class="flex items-center gap-4">
+                    <h3 class="font-bold text-slate-800 text-lg flex items-center gap-2">
+                        <i class="pi pi-users text-indigo-500"></i>
+                        Employés en attente
+                    </h3>
+                    <span class="px-3 py-1 bg-amber-100 text-amber-700 rounded-full text-xs font-bold border border-amber-200">
+                        {{ employesSansCompte.total }}
+                    </span>
+                </div>
+
+                <!-- Filtres -->
+                <div class="flex flex-col sm:flex-row gap-3">
+                    <div class="relative">
+                        <i class="pi pi-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+                        <InputText
+                            v-model="search"
+                            placeholder="Rechercher un nom..."
+                            class="!pl-9 !py-2 !text-xs !rounded-xl !bg-white !border-slate-200 focus:!ring-indigo-500 w-full sm:w-64"
+                        />
+                    </div>
+                    <Dropdown
+                        v-model="position_id"
+                        :options="positions"
+                        optionLabel="name"
+                        optionValue="id"
+                        placeholder="Filtrer par poste"
+                        showClear
+                        class="!text-xs !rounded-xl !bg-white !border-slate-200 focus:!ring-indigo-500 w-full sm:w-48"
+                    />
+                </div>
             </div>
 
             <div class="overflow-x-auto">
@@ -87,7 +143,7 @@ const getRoleBadgeClass = (roleName) => {
                     </thead>
                     <tbody class="divide-y divide-slate-50">
                         <tr
-                            v-for="emp in employesSansCompte"
+                            v-for="emp in employesSansCompte.data"
                             :key="emp.id"
                             class="hover:bg-slate-50/50 transition-colors group"
                         >
@@ -121,7 +177,7 @@ const getRoleBadgeClass = (roleName) => {
                                 </button>
                             </td>
                         </tr>
-                        <tr v-if="employesSansCompte.length === 0">
+                        <tr v-if="employesSansCompte.data.length === 0">
                             <td colspan="4" class="px-6 py-16 text-center">
                                 <div class="flex flex-col items-center gap-3">
                                     <div class="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center">
@@ -133,6 +189,39 @@ const getRoleBadgeClass = (roleName) => {
                         </tr>
                     </tbody>
                 </table>
+            </div>
+
+            <!-- Pagination -->
+            <div
+                v-if="employesSansCompte.links.length > 3"
+                class="p-6 border-t border-slate-50 bg-slate-50/30 flex items-center justify-between"
+            >
+                <div
+                    class="text-xs font-bold text-slate-400 uppercase tracking-widest"
+                >
+                    Affichage de {{ employesSansCompte.from }} à {{ employesSansCompte.to }} sur
+                    {{ employesSansCompte.total }}
+                </div>
+                <div class="flex gap-1">
+                    <template v-for="(link, k) in employesSansCompte.links" :key="k">
+                        <div
+                            v-if="link.url === null"
+                            class="px-3 py-1.5 text-slate-300 text-xs font-bold"
+                            v-html="link.label"
+                        />
+                        <Link
+                            v-else
+                            :href="link.url"
+                            class="px-3 py-1.5 text-xs font-bold rounded-lg transition-all duration-200"
+                            :class="
+                                link.active
+                                    ? 'bg-indigo-600 text-white shadow-md shadow-indigo-100'
+                                    : 'text-slate-500 hover:bg-white border border-transparent hover:border-slate-200'
+                            "
+                            v-html="link.label"
+                        />
+                    </template>
+                </div>
             </div>
         </div>
 

@@ -14,15 +14,28 @@ class UserController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        $users = User::with(['role'])
-            ->where('status', 'active')
-            ->paginate(10);
+        $query = User::with(['role', 'employee'])->where('status', 'active');
+
+        // Recherche par email ou nom (basé sur le début de l'email)
+        if ($request->filled('search')) {
+            $search = $request->input('search');
+            $query->where('email', 'like', "%{$search}%");
+        }
+
+        // Filtre par rôle
+        if ($request->filled('role_id')) {
+            $query->where('role_id', $request->input('role_id'));
+        }
+
+        $users = $query->paginate(10)->withQueryString();
  
         return Inertia::render('Users/Index', [
             'users' => $users,
             'roles' => Role::whereIn('name', ['cp', 'sup', 'tc'])->get(),
+            'allRoles' => Role::all(),
+            'filters' => $request->only(['search', 'role_id']),
         ]);
     }
  
@@ -30,7 +43,7 @@ class UserController extends Controller
     {
         $users = User::with(['role'])
             ->where('status', 'inactive')
-            ->paginate(15);
+            ->paginate(10);
         return Inertia::render('Users/Deactivated', [
             'users' => $users,
         ]);
@@ -48,9 +61,14 @@ class UserController extends Controller
                 ->whereNull('user_id')
                 ->findOrFail($request->employe_id);
         }
+
+        $employesSansCompte = Employee::whereNull('user_id')
+            ->with('position')
+            ->paginate(10);
  
         return Inertia::render('Users/No_users', [
             'employe' => $employe,
+            'employesSansCompte' => $employesSansCompte,
             'roles' => Role::whereIn('name', ['cp', 'sup', 'tc'])->get()
         ]);
     }

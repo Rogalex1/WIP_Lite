@@ -2,6 +2,8 @@
 
 namespace App\Http\Requests\Auth;
 
+use App\Models\Employee;
+use App\Models\User;
 use Illuminate\Auth\Events\Lockout;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
@@ -45,8 +47,37 @@ class LoginRequest extends FormRequest
         if (! Auth::attempt($this->only('email', 'password'), $this->boolean('remember'))) {
             RateLimiter::hit($this->throttleKey());
 
+            // Vérifier d'abord si un utilisateur existe avec cet email
+            $userExists = User::where('email', $this->email)->exists();
+
+            // Si l'utilisateur n'existe pas, on vérifie si c'est un employé qui attend son compte
+            if (!$userExists) {
+                $employee = Employee::where('email', 'like', $this->email)
+                    ->whereNull('user_id')
+                    ->whereHas('position', function ($query) {
+                        $query->whereIn('name', ['ChefProjet', 'Superviseur', 'Téléconseiller']);
+                    })
+                    ->first();
+
+                if ($employee) {
+                    throw ValidationException::withMessages([
+                        'no_account' => "Votre compte n'est pas encore créé. Veuillez vous rapprocher de votre supérieur hiérarchique pour l'activation de vos accès.",
+                    ]);
+                }
+            }
+
             throw ValidationException::withMessages([
                 'email' => trans('auth.failed'),
+            ]);
+        }
+
+        $user = Auth::user();
+
+        if ($user->status !== 'active') {
+            Auth::logout();
+
+            throw ValidationException::withMessages([
+                'account_status' => 'Votre compte est désactivé. Veuillez contacter l\'administrateur.',
             ]);
         }
 

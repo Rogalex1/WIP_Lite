@@ -2,10 +2,12 @@
 <script setup>
 import AdminLayout from "@/Layouts/AdminLayout.vue";
 import { Head, Link, useForm, router } from "@inertiajs/vue3";
-import { ref } from "vue";
+import { ref, watch } from "vue";
 import Dialog from "primevue/dialog";
 import ConfirmDialog from 'primevue/confirmdialog';
 import { useConfirm } from "primevue/useconfirm";
+import InputText from "primevue/inputtext";
+import Dropdown from "primevue/dropdown";
 
 const confirm = useConfirm();
 
@@ -14,6 +16,26 @@ defineOptions({ layout: AdminLayout });
 const props = defineProps({
     users: Object,
     roles: Array,
+    allRoles: Array,
+    filters: Object,
+});
+
+// Filtres
+const search = ref(props.filters?.search || "");
+const role_id = ref(props.filters?.role_id || "");
+
+const applyFilters = () => {
+    router.get(route('users.index'), {
+        search: search.value,
+        role_id: role_id.value,
+    }, {
+        preserveState: true,
+        replace: true,
+    });
+};
+
+watch([search, role_id], () => {
+    applyFilters();
 });
 
 // ── Dialog d'édition ──────────────────────────────────────
@@ -126,16 +148,39 @@ const getRoleColor = (roleName) => {
             class="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden"
         >
             <div
-                class="p-6 border-b border-slate-50 flex justify-between items-center"
+                class="p-6 border-b border-slate-50 flex flex-col md:flex-row md:items-center justify-between gap-4"
             >
-                <h3 class="font-bold text-slate-800 text-lg">
-                    Liste des comptes
-                </h3>
-                <span
-                    class="px-3 py-1 bg-slate-100 text-slate-500 rounded-full text-xs font-bold"
-                >
-                    {{ users.total }} utilisateurs au total
-                </span>
+                <div class="flex items-center gap-4">
+                    <h3 class="font-bold text-slate-800 text-lg">
+                        Liste des comptes
+                    </h3>
+                    <span
+                        class="px-3 py-1 bg-slate-100 text-slate-500 rounded-full text-xs font-bold"
+                    >
+                        {{ users.total }} utilisateurs
+                    </span>
+                </div>
+
+                <!-- Filtres -->
+                <div class="flex flex-col sm:flex-row gap-3">
+                    <div class="relative">
+                        <i class="pi pi-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+                        <InputText
+                            v-model="search"
+                            placeholder="Rechercher par email..."
+                            class="!pl-9 !py-2 !text-xs !rounded-xl !bg-white !border-slate-200 focus:!ring-indigo-500 w-full sm:w-64"
+                        />
+                    </div>
+                    <Dropdown
+                        v-model="role_id"
+                        :options="allRoles"
+                        optionLabel="name"
+                        optionValue="id"
+                        placeholder="Filtrer par rôle"
+                        showClear
+                        class="!text-xs !rounded-xl !bg-white !border-slate-200 focus:!ring-indigo-500 w-full sm:w-48"
+                    />
+                </div>
             </div>
 
             <div class="overflow-x-auto">
@@ -168,8 +213,13 @@ const getRoleColor = (roleName) => {
                                 <div>
                                     <span
                                         class="text-sm font-bold text-slate-700 block"
-                                        >{{ user.email.split("@")[0] }}</span
                                     >
+                                        {{ 
+                                            user.employee 
+                                            ? (user.employee.first_name + ' ' + user.employee.last_name) 
+                                            : user.email.split("@")[0] 
+                                        }}
+                                    </span>
                                     <span
                                         class="text-[11px] text-slate-400 font-medium"
                                         >ID: #{{ user.id }}</span
@@ -253,7 +303,8 @@ const getRoleColor = (roleName) => {
                         <Link
                             v-else
                             :href="link.url"
-                                                        :class="
+                            class="px-3 py-1.5 text-xs font-bold rounded-lg transition-all duration-200"
+                            :class="
                                 link.active
                                     ? 'bg-indigo-600 text-white shadow-md shadow-indigo-100'
                                     : 'text-slate-500 hover:bg-white border border-transparent hover:border-slate-200'
