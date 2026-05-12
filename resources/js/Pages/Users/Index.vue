@@ -2,7 +2,7 @@
 <script setup>
 import AdminLayout from "@/Layouts/AdminLayout.vue";
 import { Head, Link, useForm, router } from "@inertiajs/vue3";
-import { ref, watch } from "vue";
+import { ref, computed } from "vue";
 import Dialog from "primevue/dialog";
 import ConfirmDialog from 'primevue/confirmdialog';
 import { useConfirm } from "primevue/useconfirm";
@@ -14,29 +14,54 @@ const confirm = useConfirm();
 defineOptions({ layout: AdminLayout });
 
 const props = defineProps({
-    users: Object,
+    users: Array,
     roles: Array,
     allRoles: Array,
-    filters: Object,
 });
 
-// Filtres
-const search = ref(props.filters?.search || "");
-const role_id = ref(props.filters?.role_id || "");
+// État local pour le filtrage et la pagination
+const search = ref("");
+const role_id = ref(null);
+const currentPage = ref(1);
+const itemsPerPage = 10;
 
-const applyFilters = () => {
-    router.get(route('users.index'), {
-        search: search.value,
-        role_id: role_id.value,
-    }, {
-        preserveState: true,
-        replace: true,
+// Logique de filtrage côté client
+const filteredUsers = computed(() => {
+    return props.users.filter((user) => {
+        const matchesSearch = user.email.toLowerCase().includes(search.value.toLowerCase()) ||
+            (user.employee && (user.employee.first_name + ' ' + user.employee.last_name).toLowerCase().includes(search.value.toLowerCase()));
+        
+        const matchesRole = !role_id.value || user.role_id === role_id.value;
+        
+        return matchesSearch && matchesRole;
     });
-};
-
-watch([search, role_id], () => {
-    applyFilters();
 });
+
+// Logique de pagination côté client
+const paginatedUsers = computed(() => {
+    const start = (currentPage.value - 1) * itemsPerPage;
+    return filteredUsers.value.slice(start, start + itemsPerPage);
+});
+
+const totalPages = computed(() => Math.ceil(filteredUsers.value.length / itemsPerPage));
+
+const paginationLinks = computed(() => {
+    const links = [];
+    links.push({ label: "&laquo; Précédent", url: currentPage.value > 1 ? true : null, active: false, page: currentPage.value - 1 });
+    
+    for (let i = 1; i <= totalPages.value; i++) {
+        links.push({ label: i.toString(), url: true, active: i === currentPage.value, page: i });
+    }
+    
+    links.push({ label: "Suivant &raquo;", url: currentPage.value < totalPages.value ? true : null, active: false, page: currentPage.value + 1 });
+    return links;
+});
+
+const goToPage = (page) => {
+    if (page >= 1 && page <= totalPages.value) {
+        currentPage.value = page;
+    }
+};
 
 // ── Dialog d'édition ──────────────────────────────────────
 const showEditDialog = ref(false);
@@ -157,7 +182,7 @@ const getRoleColor = (roleName) => {
                     <span
                         class="px-3 py-1 bg-slate-100 text-slate-500 rounded-full text-xs font-bold"
                     >
-                        {{ users.total }} utilisateurs
+                        {{ filteredUsers.length }} utilisateurs
                     </span>
                 </div>
 
@@ -167,12 +192,14 @@ const getRoleColor = (roleName) => {
                         <i class="pi pi-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
                         <InputText
                             v-model="search"
+                            @input="currentPage = 1"
                             placeholder="Rechercher par email..."
                             class="!pl-9 !py-2 !text-xs !rounded-xl !bg-white !border-slate-200 focus:!ring-indigo-500 w-full sm:w-64"
                         />
                     </div>
                     <Dropdown
                         v-model="role_id"
+                        @change="currentPage = 1"
                         :options="allRoles"
                         optionLabel="name"
                         optionValue="id"
@@ -198,7 +225,7 @@ const getRoleColor = (roleName) => {
                     </thead>
                     <tbody class="divide-y divide-slate-50">
                         <tr
-                            v-for="user in users.data"
+                            v-for="user in paginatedUsers"
                             :key="user.id"
                             class="hover:bg-slate-50/50 transition-colors group"
                         >
@@ -270,7 +297,7 @@ const getRoleColor = (roleName) => {
                                 </div>
                             </td>
                         </tr>
-                        <tr v-if="users.data.length === 0">
+                        <tr v-if="filteredUsers.length === 0">
                             <td
                                 colspan="5"
                                 class="px-6 py-12 text-center text-slate-400 italic"
@@ -284,25 +311,25 @@ const getRoleColor = (roleName) => {
 
             <!-- Pagination -->
             <div
-                v-if="users.links.length > 3"
+                v-if="totalPages > 1"
                 class="p-6 border-t border-slate-50 bg-slate-50/30 flex items-center justify-between"
             >
                 <div
                     class="text-xs font-bold text-slate-400 uppercase tracking-widest"
                 >
-                    Affichage de {{ users.from }} à {{ users.to }} sur
-                    {{ users.total }}
+                    Affichage de {{ (currentPage - 1) * itemsPerPage + 1 }} à {{ Math.min(currentPage * itemsPerPage, filteredUsers.length) }} sur
+                    {{ filteredUsers.length }}
                 </div>
                 <div class="flex gap-1">
-                    <template v-for="(link, k) in users.links" :key="k">
+                    <template v-for="(link, k) in paginationLinks" :key="k">
                         <div
                             v-if="link.url === null"
                             class="px-3 py-1.5 text-slate-300 text-xs font-bold"
                             v-html="link.label"
                         />
-                        <Link
+                        <button
                             v-else
-                            :href="link.url"
+                            @click="goToPage(link.page)"
                             class="px-3 py-1.5 text-xs font-bold rounded-lg transition-all duration-200"
                             :class="
                                 link.active

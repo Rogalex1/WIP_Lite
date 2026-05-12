@@ -6,6 +6,8 @@ use App\Models\Assignment;
 use App\Models\AssignmentHistory;
 use App\Models\Campaign;
 use App\Models\Employee;
+use App\Models\Position;
+use App\Models\Role;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Notification;
@@ -64,30 +66,14 @@ class AdminController extends Controller
 
     public function no_user(Request $request)
     {
-        $query = Employee::whereNull('user_id')->with('position');
-
-        // Recherche par nom ou prénom
-        if ($request->filled('search')) {
-            $search = $request->input('search');
-            $query->where(function ($q) use ($search) {
-                $q->where('first_name', 'like', "%{$search}%")
-                  ->orWhere('last_name', 'like', "%{$search}%")
-                  ->orWhere('email', 'like', "%{$search}%");
-            });
-        }
-
-        // Filtre par poste
-        if ($request->filled('position_id')) {
-            $query->where('position_id', $request->input('position_id'));
-        }
-
-        $employesSansCompte = $query->paginate(10)->withQueryString();
+        $employesSansCompte = Employee::whereNull('user_id')
+            ->with('position')
+            ->get();
         
         return Inertia::render('Users/No_users', [
             'employesSansCompte' => $employesSansCompte,
-            'positions' => \App\Models\Position::all(),
-            'roles' => \App\Models\Role::whereIn('name', ['cp', 'sup', 'tc'])->get(),
-            'filters' => $request->only(['search', 'position_id']),
+            'positions' => Position::all(),
+            'roles' => Role::whereIn('name', ['cp', 'sup', 'tc'])->get(),
         ]);
     }
 }

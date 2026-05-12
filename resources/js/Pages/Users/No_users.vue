@@ -1,6 +1,6 @@
 <script setup>
 import { useForm, Head, Link, router } from "@inertiajs/vue3";
-import { ref, watch } from "vue";
+import { ref, computed } from "vue";
 import AdminLayout from "@/Layouts/AdminLayout.vue";
 import Dialog from "primevue/dialog";
 import InputText from "primevue/inputtext";
@@ -9,30 +9,57 @@ import Dropdown from "primevue/dropdown";
 defineOptions({ layout: AdminLayout });
 
 const props = defineProps({
-    employesSansCompte: Object,
+    employesSansCompte: Array,
     employe: Object, // L'employé sélectionné pour le pré-remplissage
     roles: Array,
     positions: Array,
-    filters: Object,
 });
 
-// Filtres
-const search = ref(props.filters?.search || "");
-const position_id = ref(props.filters?.position_id || "");
+// État local pour le filtrage et la pagination
+const search = ref("");
+const position_id = ref(null);
+const currentPage = ref(1);
+const itemsPerPage = 10;
 
-const applyFilters = () => {
-    router.get(route('admin.no_users'), {
-        search: search.value,
-        position_id: position_id.value,
-    }, {
-        preserveState: true,
-        replace: true,
+// Logique de filtrage côté client
+const filteredEmployees = computed(() => {
+    return props.employesSansCompte.filter((emp) => {
+        const fullName = (emp.first_name + ' ' + emp.last_name).toLowerCase();
+        const matchesSearch = fullName.includes(search.value.toLowerCase()) ||
+            emp.email.toLowerCase().includes(search.value.toLowerCase()) ||
+            emp.matricule.toLowerCase().includes(search.value.toLowerCase());
+        
+        const matchesPosition = !position_id.value || emp.position_id === position_id.value;
+        
+        return matchesSearch && matchesPosition;
     });
-};
-
-watch([search, position_id], () => {
-    applyFilters();
 });
+
+// Logique de pagination côté client
+const paginatedEmployees = computed(() => {
+    const start = (currentPage.value - 1) * itemsPerPage;
+    return filteredEmployees.value.slice(start, start + itemsPerPage);
+});
+
+const totalPages = computed(() => Math.ceil(filteredEmployees.value.length / itemsPerPage));
+
+const paginationLinks = computed(() => {
+    const links = [];
+    links.push({ label: "&laquo; Précédent", url: currentPage.value > 1 ? true : null, active: false, page: currentPage.value - 1 });
+    
+    for (let i = 1; i <= totalPages.value; i++) {
+        links.push({ label: i.toString(), url: true, active: i === currentPage.value, page: i });
+    }
+    
+    links.push({ label: "Suivant &raquo;", url: currentPage.value < totalPages.value ? true : null, active: false, page: currentPage.value + 1 });
+    return links;
+});
+
+const goToPage = (page) => {
+    if (page >= 1 && page <= totalPages.value) {
+        currentPage.value = page;
+    }
+};
 
 // Initialisation du formulaire
 const form = useForm({
@@ -105,7 +132,7 @@ const getRoleBadgeClass = (roleName) => {
                         Employés en attente
                     </h3>
                     <span class="px-3 py-1 bg-amber-100 text-amber-700 rounded-full text-xs font-bold border border-amber-200">
-                        {{ employesSansCompte.total }}
+                        {{ filteredEmployees.length }}
                     </span>
                 </div>
 
@@ -115,12 +142,14 @@ const getRoleBadgeClass = (roleName) => {
                         <i class="pi pi-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
                         <InputText
                             v-model="search"
+                            @input="currentPage = 1"
                             placeholder="Rechercher un nom..."
                             class="!pl-9 !py-2 !text-xs !rounded-xl !bg-white !border-slate-200 focus:!ring-indigo-500 w-full sm:w-64"
                         />
                     </div>
                     <Dropdown
                         v-model="position_id"
+                        @change="currentPage = 1"
                         :options="positions"
                         optionLabel="name"
                         optionValue="id"
@@ -143,7 +172,7 @@ const getRoleBadgeClass = (roleName) => {
                     </thead>
                     <tbody class="divide-y divide-slate-50">
                         <tr
-                            v-for="emp in employesSansCompte.data"
+                            v-for="emp in paginatedEmployees"
                             :key="emp.id"
                             class="hover:bg-slate-50/50 transition-colors group"
                         >
@@ -177,7 +206,7 @@ const getRoleBadgeClass = (roleName) => {
                                 </button>
                             </td>
                         </tr>
-                        <tr v-if="employesSansCompte.data.length === 0">
+                        <tr v-if="filteredEmployees.length === 0">
                             <td colspan="4" class="px-6 py-16 text-center">
                                 <div class="flex flex-col items-center gap-3">
                                     <div class="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center">
@@ -193,25 +222,25 @@ const getRoleBadgeClass = (roleName) => {
 
             <!-- Pagination -->
             <div
-                v-if="employesSansCompte.links.length > 3"
+                v-if="totalPages > 1"
                 class="p-6 border-t border-slate-50 bg-slate-50/30 flex items-center justify-between"
             >
                 <div
                     class="text-xs font-bold text-slate-400 uppercase tracking-widest"
                 >
-                    Affichage de {{ employesSansCompte.from }} à {{ employesSansCompte.to }} sur
-                    {{ employesSansCompte.total }}
+                    Affichage de {{ (currentPage - 1) * itemsPerPage + 1 }} à {{ Math.min(currentPage * itemsPerPage, filteredEmployees.length) }} sur
+                    {{ filteredEmployees.length }}
                 </div>
                 <div class="flex gap-1">
-                    <template v-for="(link, k) in employesSansCompte.links" :key="k">
+                    <template v-for="(link, k) in paginationLinks" :key="k">
                         <div
                             v-if="link.url === null"
                             class="px-3 py-1.5 text-slate-300 text-xs font-bold"
                             v-html="link.label"
                         />
-                        <Link
+                        <button
                             v-else
-                            :href="link.url"
+                            @click="goToPage(link.page)"
                             class="px-3 py-1.5 text-xs font-bold rounded-lg transition-all duration-200"
                             :class="
                                 link.active

@@ -16,26 +16,14 @@ class UserController extends Controller
      */
     public function index(Request $request)
     {
-        $query = User::with(['role', 'employee'])->where('status', 'active');
-
-        // Recherche par email ou nom (basé sur le début de l'email)
-        if ($request->filled('search')) {
-            $search = $request->input('search');
-            $query->where('email', 'like', "%{$search}%");
-        }
-
-        // Filtre par rôle
-        if ($request->filled('role_id')) {
-            $query->where('role_id', $request->input('role_id'));
-        }
-
-        $users = $query->paginate(10)->withQueryString();
+        $users = User::with(['role', 'employee'])
+            ->where('status', 'active')
+            ->get();
  
         return Inertia::render('Users/Index', [
             'users' => $users,
             'roles' => Role::whereIn('name', ['cp', 'sup', 'tc'])->get(),
             'allRoles' => Role::all(),
-            'filters' => $request->only(['search', 'role_id']),
         ]);
     }
  
