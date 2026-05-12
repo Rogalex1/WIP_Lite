@@ -46,4 +46,10 @@ class User extends Authenticatable
     {
         return $this->belongsTo(Role::class);
     }
+
+    // AJOUTE CECI :
+    public function employee()
+    {
+        return $this->hasOne(Employee::class);
+    }
 }

@@ -8,6 +8,7 @@ use App\Http\Controllers\Cp\CpController;
 use App\Http\Controllers\Sup\SupController;
 use App\Http\Controllers\Tc\TcController;
 use App\Http\Controllers\EmployeeController;
+use App\Http\Controllers\TimesheetController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -138,7 +139,14 @@ Route::get('/employees/{employee}/history', [EmployeeController::class, 'history
 
 
 
-///////////////////////Routes DYLAN ////////////////////////////////////////////////
+///////////////////////Routes DYLAN - GESTION DES HEURES ////////////////////////////////////////////////
+
+Route::middleware('auth')->prefix('timesheets')->name('timesheets.')->group(function () {
+    Route::get('/', [TimesheetController::class, 'index'])->name('index');
+    Route::get('/{employee}', [TimesheetController::class, 'show'])->name('show');
+    Route::post('/{employee}', [TimesheetController::class, 'store'])->name('store');
+    Route::post('/{timesheet}/validate', [TimesheetController::class, 'validate'])->name('validate');
+});
 
 
 
